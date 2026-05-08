@@ -3,6 +3,8 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 import {
   Dialog,
@@ -11,10 +13,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
-import { Input } from "@/components/ui/input";
-
-import { Label } from "@/components/ui/label";
 
 export default function AddCustomerDialog() {
   const [formData, setFormData] = useState({
@@ -26,65 +24,74 @@ export default function AddCustomerDialog() {
     duration: "",
   });
 
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement>
-  ) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   }
 
-  function handleSubmit() {
-    console.log(formData);
+  // CALCULATIONS
+  // const loan = Number(formData.loanAmount || 0);
+  // const interest = Number(formData.interestRate || 0);
+  // const duration = Number(formData.duration || 0);
 
-    // later:
-    // save to mongodb
-    // call server action
-    // reset form
+  // const totalWithInterest = loan + (loan * interest) / 100;
+  // const monthlyPayment = duration ? totalWithInterest / duration : 0;
+  // const dailyPayment = totalWithInterest / (duration*30);
+
+  const loan = Number(formData.loanAmount || 0);
+  const monthlyRate = Number(formData.interestRate || 0); // 8
+  const duration = Number(formData.duration || 0); // 2 months
+
+  // Total Interest = Principal * (Monthly Rate / 100) * Number of Months
+  const totalInterest = loan * (monthlyRate / 100) * duration;
+
+  const totalWithInterest = loan + totalInterest;
+
+  // Monthly and Daily payments
+  const monthlyPayment = duration > 0 ? totalWithInterest / duration : 0;
+  const dailyPayment = duration > 0 ? totalWithInterest / (duration * 30) : 0;
+
+  function handleSubmit() {
+    console.log({
+      ...formData,
+      totalWithInterest,
+      monthlyPayment,
+      dailyPayment,
+    });
+
+    // later: save to db
   }
 
   return (
     <Dialog>
-
       {/* Open Button */}
       <DialogTrigger asChild>
-        <Button className="rounded-xl cursor-pointer">
+        <Button type="button" className="rounded-xl cursor-pointer">
           Add Customer
         </Button>
       </DialogTrigger>
 
       {/* Dialog */}
       <DialogContent className="sm:max-w-[600px] rounded-2xl">
-
         <DialogHeader>
-          <DialogTitle>
-            Add New Customer
-          </DialogTitle>
+          <DialogTitle>Add New Customer</DialogTitle>
         </DialogHeader>
 
         {/* Form */}
         <div className="grid grid-cols-2 gap-4 py-4">
-
           {/* Name */}
           <div className="space-y-2">
             <Label>Customer Name</Label>
-
-            <Input
-              name="name"
-              placeholder="Enter customer name"
-              value={formData.name}
-              onChange={handleChange}
-            />
+            <Input name="name" value={formData.name} onChange={handleChange} />
           </div>
 
           {/* Contact */}
           <div className="space-y-2">
-            <Label>Contact Number</Label>
-
+            <Label>Contact</Label>
             <Input
               name="contact"
-              placeholder="0771234567"
               value={formData.contact}
               onChange={handleChange}
             />
@@ -93,36 +100,30 @@ export default function AddCustomerDialog() {
           {/* Address */}
           <div className="space-y-2 col-span-2">
             <Label>Address</Label>
-
             <Input
               name="address"
-              placeholder="Enter address"
               value={formData.address}
               onChange={handleChange}
             />
           </div>
 
-          {/* Loan Amount */}
+          {/* Loan */}
           <div className="space-y-2">
             <Label>Loan Amount</Label>
-
             <Input
               type="number"
               name="loanAmount"
-              placeholder="50000"
               value={formData.loanAmount}
               onChange={handleChange}
             />
           </div>
 
-          {/* Interest Rate */}
+          {/* Interest */}
           <div className="space-y-2">
-            <Label>Interest Rate (%)</Label>
-
+            <Label>Monthly Interest %</Label>
             <Input
               type="number"
               name="interestRate"
-              placeholder="12"
               value={formData.interestRate}
               onChange={handleChange}
             />
@@ -130,29 +131,41 @@ export default function AddCustomerDialog() {
 
           {/* Duration */}
           <div className="space-y-2">
-            <Label>Loan Duration (Months)</Label>
-
+            <Label>Duration (Months)</Label>
             <Input
               type="number"
               name="duration"
-              placeholder="12"
               value={formData.duration}
               onChange={handleChange}
             />
           </div>
+        </div>
 
+        {/* CALCULATION PREVIEW */}
+        <div className="p-4 bg-zinc-50 rounded-xl space-y-1 text-sm border">
+          <p>
+            Total Amount: <b>Rs. {totalWithInterest.toLocaleString()}</b>
+          </p>
+
+          <p>
+            Monthly Payment: <b>Rs. {monthlyPayment.toFixed(2)}</b>
+          </p>
+
+          <p>
+            Daily Payment: <b>Rs. {dailyPayment.toFixed(2)}</b>
+          </p>
         </div>
 
         {/* Footer */}
         <div className="flex justify-end">
           <Button
+            type="button"
             onClick={handleSubmit}
             className="rounded-xl cursor-pointer"
           >
             Save Customer
           </Button>
         </div>
-
       </DialogContent>
     </Dialog>
   );

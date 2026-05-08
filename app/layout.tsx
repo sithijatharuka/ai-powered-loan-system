@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import AppSidebar from "@/components/SideBar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -15,13 +18,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className="h-full antialiased"
-    >
+    <html lang="en" className="h-full antialiased">
       <body className={`${inter.className} min-h-full flex flex-col`}>
-        {children}        
-        </body>
+        <SidebarProvider>
+          <div className="flex min-h-screen w-full">
+            {/* Sidebar */}
+            <AppSidebar />
+
+            {/* MAIN AREA */}
+            <main className="flex-1 w-full overflow-auto">{children}</main>
+          </div>
+        </SidebarProvider>
+      </body>
     </html>
   );
 }
