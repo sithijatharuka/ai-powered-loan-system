@@ -36,6 +36,7 @@ const customersData = [
     contact: "0712345678",
     balance: 45000,
   },
+
 ];
 
 export default function Collections() {
