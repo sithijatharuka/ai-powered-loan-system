@@ -20,17 +20,8 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <body className={`${inter.className} min-h-full flex flex-col`}>
-        <SidebarProvider>
-          <div className="flex min-h-screen w-full">
-            {/* Sidebar */}
-            <AppSidebar />
- <div className="h-14 flex items-center border-b px-4">
-        <SidebarTrigger />
-      </div>
-            {/* MAIN AREA */}
-            <main className="flex-1 w-full overflow-auto">{children}</main>
-          </div>
-        </SidebarProvider>
+        {/* MAIN AREA */}
+        <main className="flex-1 w-full overflow-auto">{children}</main>
       </body>
     </html>
   );

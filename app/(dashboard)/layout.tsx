@@ -1,3 +1,6 @@
+import AppSidebar from "@/components/SideBar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+
 export default function DashLayout({
   children,
 }: {
@@ -5,9 +8,17 @@ export default function DashLayout({
 }) {
   return (
     <div className="flex flex-1">
-      <main className="flex-1 overflow-auto p-6">
-        {children}
-      </main>
+      <SidebarProvider>
+        <div className="flex min-h-screen w-full">
+          {/* Sidebar */}
+          <AppSidebar />
+          <div className="h-14 flex items-center border-b px-4">
+            <SidebarTrigger />
+          </div>
+          {/* MAIN AREA */}
+          <main className="flex-1 overflow-auto p-6">{children}</main>
+        </div>
+      </SidebarProvider>
     </div>
   );
 }
