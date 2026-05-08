@@ -1,0 +1,211 @@
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+import { Badge } from "@/components/ui/badge";
+
+export default async function CustomerDetails( {
+   params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+
+  const { id: customerId } = await params;
+  // Mock data (later from MongoDB)
+  const customer = {
+    id: customerId,
+    name: "Kamal Perera",
+    contact: "0771234567",
+    address: "Colombo",
+    loanAmount: 50000,
+    interestRate: 12,
+    duration: 12,
+    paidAmount: 20000,
+    transactions: [
+      { date: "2026-01-01", amount: 5000 },
+      { date: "2026-02-01", amount: 5000 },
+      { date: "2026-03-01", amount: 10000 },
+    ],
+  };
+
+  const totalWithInterest =
+    customer.loanAmount +
+    (customer.loanAmount * customer.interestRate) / 100;
+
+  const remaining = totalWithInterest - customer.paidAmount;
+
+  return (
+    <div className="p-6 space-y-6">
+
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">
+          Customer Details
+        </h1>
+
+        <p className="text-sm text-zinc-500 mt-1">
+          View customer loan and payment information
+        </p>
+      </div>
+
+      {/* Basic Information */}
+      <Card className="rounded-2xl shadow-sm">
+        <CardHeader>
+          <CardTitle>Basic Information</CardTitle>
+        </CardHeader>
+
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+
+            <div>
+              <p className="text-zinc-500">Customer ID</p>
+              <p className="font-medium">#{customer.id}</p>
+            </div>
+
+            <div>
+              <p className="text-zinc-500">Name</p>
+              <p className="font-medium">{customer.name}</p>
+            </div>
+
+            <div>
+              <p className="text-zinc-500">Contact</p>
+              <p className="font-medium">{customer.contact}</p>
+            </div>
+
+            <div>
+              <p className="text-zinc-500">Address</p>
+              <p className="font-medium">{customer.address}</p>
+            </div>
+
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Loan Details */}
+      <Card className="rounded-2xl shadow-sm">
+        <CardHeader>
+          <CardTitle>Loan Details</CardTitle>
+        </CardHeader>
+
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+
+            <div>
+              <p className="text-zinc-500">Loan Amount</p>
+              <p className="font-medium">
+                Rs. {customer.loanAmount.toLocaleString()}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-zinc-500">Interest Rate</p>
+              <p className="font-medium">
+                {customer.interestRate}%
+              </p>
+            </div>
+
+            <div>
+              <p className="text-zinc-500">Duration</p>
+              <p className="font-medium">
+                {customer.duration} months
+              </p>
+            </div>
+
+            <div>
+              <p className="text-zinc-500">Total Payable</p>
+              <p className="font-medium text-blue-600">
+                Rs. {totalWithInterest.toLocaleString()}
+              </p>
+            </div>
+
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Payment Status */}
+      <Card className="rounded-2xl shadow-sm">
+        <CardHeader>
+          <CardTitle>Payment Status</CardTitle>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+
+          <div className="flex items-center gap-3">
+            <Badge className="rounded-lg">
+              Paid
+            </Badge>
+
+            <p className="font-medium">
+              Rs. {customer.paidAmount.toLocaleString()}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Badge
+              variant="destructive"
+              className="rounded-lg"
+            >
+              Remaining
+            </Badge>
+
+            <p className="font-semibold text-red-600">
+              Rs. {remaining.toLocaleString()}
+            </p>
+          </div>
+
+        </CardContent>
+      </Card>
+
+      {/* Transaction History */}
+      <Card className="rounded-2xl shadow-sm">
+        <CardHeader>
+          <CardTitle>Transaction History</CardTitle>
+        </CardHeader>
+
+        <CardContent>
+
+          <div className="border rounded-xl overflow-hidden">
+            <Table>
+
+              <TableHeader className="bg-zinc-50">
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                {customer.transactions.map((t, i) => (
+                  <TableRow key={i}>
+
+                    <TableCell>{t.date}</TableCell>
+
+                    <TableCell className="font-medium text-green-600">
+                      Rs. {t.amount.toLocaleString()}
+                    </TableCell>
+
+                  </TableRow>
+                ))}
+              </TableBody>
+
+            </Table>
+          </div>
+
+        </CardContent>
+      </Card>
+
+    </div>
+  );
+}

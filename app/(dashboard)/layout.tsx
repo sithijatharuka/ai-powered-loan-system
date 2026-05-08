@@ -1,4 +1,4 @@
-import Sidebar from "@/components/ui/SideBar";
+import Sidebar from "@/components/SideBar";
 
 export default function DashLayout({
   children,
