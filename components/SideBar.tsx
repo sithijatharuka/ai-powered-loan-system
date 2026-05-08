@@ -135,7 +135,7 @@ export default function AppSidebar() {
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
 
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="flex flex-col gap-4">
 
               {menu.map((item) => (
                 <SidebarMenuItem key={item.href}>

@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Badge } from "./ui/badge";
 
 export default function AddCustomerDialog() {
   const [formData, setFormData] = useState({
@@ -32,13 +33,6 @@ export default function AddCustomerDialog() {
   }
 
   // CALCULATIONS
-  // const loan = Number(formData.loanAmount || 0);
-  // const interest = Number(formData.interestRate || 0);
-  // const duration = Number(formData.duration || 0);
-
-  // const totalWithInterest = loan + (loan * interest) / 100;
-  // const monthlyPayment = duration ? totalWithInterest / duration : 0;
-  // const dailyPayment = totalWithInterest / (duration*30);
 
   const loan = Number(formData.loanAmount || 0);
   const monthlyRate = Number(formData.interestRate || 0); // 8
@@ -77,6 +71,9 @@ export default function AddCustomerDialog() {
       <DialogContent className="sm:max-w-[600px] rounded-2xl">
         <DialogHeader>
           <DialogTitle>Add New Customer</DialogTitle>
+          <Badge className="rounded-full p-3 bg-blue-50 text-blue-600 border border-blue-200">
+            Customer #{1}
+          </Badge>
         </DialogHeader>
 
         {/* Form */}

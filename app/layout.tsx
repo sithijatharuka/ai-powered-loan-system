@@ -24,7 +24,9 @@ export default function RootLayout({
           <div className="flex min-h-screen w-full">
             {/* Sidebar */}
             <AppSidebar />
-
+ <div className="h-14 flex items-center border-b px-4">
+        <SidebarTrigger />
+      </div>
             {/* MAIN AREA */}
             <main className="flex-1 w-full overflow-auto">{children}</main>
           </div>
