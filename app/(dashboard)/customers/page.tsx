@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import AddCustomerDialog from "@/components/AddCustomerDialog";
 
 const initialCustomers = [
   {
@@ -51,25 +52,37 @@ export default function CustomersPage() {
 
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Customers</h1>
 
-        {/* Search */}
-        <div className="relative w-80">
-          <Search
-            size={18}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
-          />
+        {/* Title */}
+        <h1 className="text-2xl font-bold">
+          Customers
+        </h1>
 
-          <Input
-            type="text"
-            placeholder="Search by name, contact, address..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 h-10 rounded-xl"
-          />
+        {/* Right Side */}
+        <div className="flex items-center gap-3">
+
+          {/* Search */}
+          <div className="relative w-80">
+            <Search
+              size={18}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
+            />
+
+            <Input
+              type="text"
+              placeholder="Search by name, contact, address..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 h-10 rounded-xl"
+            />
+          </div>
+
+          {/* Add Customer Button */}
+          <AddCustomerDialog />
+
         </div>
-      </div>
 
+      </div>
       {/* Table */}
       <div className="rounded-xl border bg-white overflow-hidden">
         <Table>
@@ -117,7 +130,7 @@ export default function CustomersPage() {
                   <TableCell className="text-right">
                     <Link href={`/customers/${c.id}`}>
                       <Button
-                        size="sm"
+                        size="lg"
                         className="rounded-lg cursor-pointer"
                       >
                         View

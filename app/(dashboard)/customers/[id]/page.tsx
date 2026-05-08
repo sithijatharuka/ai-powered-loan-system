@@ -15,9 +15,10 @@ import {
 } from "@/components/ui/table";
 
 import { Badge } from "@/components/ui/badge";
+import AddCustomerDialog from "@/components/AddCustomerDialog";
 
-export default async function CustomerDetails( {
-   params,
+export default async function CustomerDetails({
+  params,
 }: {
   params: Promise<{ id: string }>;
 }) {
@@ -58,6 +59,7 @@ export default async function CustomerDetails( {
         <p className="text-sm text-zinc-500 mt-1">
           View customer loan and payment information
         </p>
+
       </div>
 
       {/* Basic Information */}
