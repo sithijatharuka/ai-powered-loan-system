@@ -8,8 +8,6 @@ import { Input } from "@/components/ui/input";
 
 import { Label } from "@/components/ui/label";
 
-import { Badge } from "@/components/ui/badge";
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import {
@@ -56,6 +54,7 @@ export default function Settings() {
     email: "",
     phone: "",
     area: "",
+    password: "",
   });
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -79,6 +78,7 @@ export default function Settings() {
       email: "",
       phone: "",
       area: "",
+      password: "",
     });
   }
 
@@ -100,57 +100,33 @@ export default function Settings() {
             <Button className="rounded-xl">Add Collection Officer</Button>
           </DialogTrigger>
 
-          <DialogContent className="sm:max-w-[550px] rounded-2xl">
+          <DialogContent className="sm:max-w-[450px] rounded-2xl">
             <DialogHeader>
               <DialogTitle>Add Collection Officer</DialogTitle>
             </DialogHeader>
 
             {/* FORM */}
-            <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="grid grid-cols-1 gap-4 py-4">
               {/* NAME */}
               <div className="space-y-2">
-                <Label>Officer Name</Label>
+                <Label>User Name</Label>
 
                 <Input
                   name="name"
-                  placeholder="Enter officer name"
+                  placeholder="Enter user name"
                   value={formData.name}
-                  onChange={handleChange}
-                />
-              </div>
-
-              {/* EMAIL */}
-              <div className="space-y-2">
-                <Label>Email</Label>
-
-                <Input
-                  name="email"
-                  placeholder="example@gmail.com"
-                  value={formData.email}
                   onChange={handleChange}
                 />
               </div>
 
               {/* PHONE */}
               <div className="space-y-2">
-                <Label>Phone Number</Label>
+                <Label>Password</Label>
 
                 <Input
-                  name="phone"
-                  placeholder="0771234567"
-                  value={formData.phone}
-                  onChange={handleChange}
-                />
-              </div>
-
-              {/* AREA */}
-              <div className="space-y-2">
-                <Label>Collection Area</Label>
-
-                <Input
-                  name="area"
-                  placeholder="Colombo"
-                  value={formData.area}
+                  name="password"
+                  placeholder="Enter password"
+                  value={formData.password}
                   onChange={handleChange}
                 />
               </div>
@@ -182,13 +158,7 @@ export default function Settings() {
 
                   <TableHead>Name</TableHead>
 
-                  <TableHead>Email</TableHead>
-
                   <TableHead>Phone</TableHead>
-
-                  <TableHead>Area</TableHead>
-
-                  <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -200,15 +170,7 @@ export default function Settings() {
 
                     <TableCell>{officer.name}</TableCell>
 
-                    <TableCell>{officer.email}</TableCell>
-
                     <TableCell>{officer.phone}</TableCell>
-
-                    <TableCell>{officer.area}</TableCell>
-
-                    <TableCell>
-                      <Badge className="rounded-lg">{officer.status}</Badge>
-                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
