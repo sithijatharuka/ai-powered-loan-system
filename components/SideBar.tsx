@@ -35,7 +35,6 @@
 //           Loans
 //         </NavItem>
 
-
 //         <NavItem href="/ai-insights" $active={pathname === "/ai-insights"}>
 //           <FileText size={18} />
 //           Ai Insights
@@ -122,13 +121,10 @@ export default function AppSidebar() {
 
   return (
     <Sidebar>
-
       {/* BRAND */}
       <SidebarContent>
         <div className="px-4 py-4">
-          <h1 className="text-xl font-bold text-primary">
-            LoanFlow
-          </h1>
+          <h1 className="text-xl font-bold text-primary">LoanFlow</h1>
         </div>
 
         <SidebarGroup>
@@ -136,7 +132,6 @@ export default function AppSidebar() {
 
           <SidebarGroupContent>
             <SidebarMenu className="flex flex-col gap-4">
-
               {menu.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton asChild isActive={pathname === item.href}>
@@ -147,7 +142,6 @@ export default function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -159,7 +153,6 @@ export default function AppSidebar() {
           v1.0 • Loan Management System
         </div>
       </SidebarFooter>
-
     </Sidebar>
   );
 }

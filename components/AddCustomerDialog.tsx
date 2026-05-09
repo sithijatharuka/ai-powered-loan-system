@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,15 +48,26 @@ export default function AddCustomerDialog() {
   const monthlyPayment = duration > 0 ? totalWithInterest / duration : 0;
   const dailyPayment = duration > 0 ? totalWithInterest / (duration * 30) : 0;
 
-  function handleSubmit() {
-    console.log({
-      ...formData,
-      totalWithInterest,
-      monthlyPayment,
-      dailyPayment,
+  async function handleSubmit() {
+    // Send the form data along with calculated values to the API
+    const res = await fetch("/api/customers", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...formData,
+        totalWithInterest,
+        monthlyPayment,
+        dailyPayment,
+      }),
     });
 
-    // later: save to db
+    if (res.ok) {
+      // Show success message and reset the form
+      toast.success("Customer saved successfully!");
+      setFormData({ name: "", contact: "", address: "", loanAmount: "", interestRate: "", duration: "" });
+    } else {
+      toast.error("Failed to save customer. Please try again.");
+    }
   }
 
   return (
