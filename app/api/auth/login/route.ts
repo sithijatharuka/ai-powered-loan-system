@@ -18,7 +18,7 @@ export async function POST(
       loginSchema.parse(body);
 
     const data = await loginUser(
-      validatedData.email,
+      validatedData.name,
       validatedData.password
     );
 
@@ -32,9 +32,10 @@ export async function POST(
       data.token,
       {
         httpOnly: true,
-        secure: false,
+        secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/",
+        maxAge: 60 * 60 * 24 * 7, // 7 days
       }
     );
 

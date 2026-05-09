@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 
 import { Label } from "@/components/ui/label";
 
+import { toast } from "sonner";
+
 import {
   Card,
   CardContent,
@@ -17,9 +19,51 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
+
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+
+  const [loading, setLoading] = useState(false);
+
+  const router = useRouter();
+
+  {
+    /* Login Function */
+  }
+  async function handleLogin() {
+    try {
+      setLoading(true);
+
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          password,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        toast(data.message);
+        return;
+      }
+
+      // redirect to dashboard
+      router.push("/dashboard");
+    } catch (error) {
+      toast("Login failed");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-50 p-4">
@@ -38,10 +82,12 @@ export default function Login() {
             <Label htmlFor="username">Username</Label>
 
             <Input
-              id="username"
+              id="name"
               type="text"
               placeholder="Enter username"
               className="h-12 rounded-xl"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             />
           </div>
 
@@ -55,6 +101,8 @@ export default function Login() {
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter password"
                 className="h-12 rounded-xl pr-12"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
 
               <Button
@@ -70,7 +118,11 @@ export default function Login() {
           </div>
 
           {/* Login Button */}
-          <Button className="w-full h-12 rounded-xl text-base font-semibold">
+          <Button
+            className="w-full h-12 rounded-xl text-base font-semibold"
+            onClick={handleLogin}
+            disabled={loading}
+          >
             Sign In
           </Button>
         </CardContent>
