@@ -78,7 +78,16 @@ export default async function CustomerDetails({
     closedAt: isLoanComplete ? customer.updatedAt : undefined,
   };
 
-  const percentPaid = totalWithInterest > 0 ? Math.max(0, Math.min(100, Math.round((customer.paidAmount / totalWithInterest) * 100))) : 0;
+  const percentPaid =
+    totalWithInterest > 0
+      ? Math.max(
+          0,
+          Math.min(
+            100,
+            Math.round((customer.paidAmount / totalWithInterest) * 100),
+          ),
+        )
+      : 0;
 
   const completedLoans = [
     ...((customer.loanHistory as LoanRecord[] | undefined) ?? []),
