@@ -16,7 +16,11 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "./ui/badge";
 
-export default function AddCustomerDialog() {
+export default function AddCustomerDialog({
+  onCustomerSaved,
+}: {
+  onCustomerSaved?: () => void;
+}) {
   const [formData, setFormData] = useState({
     name: "",
     contact: "",
@@ -25,6 +29,8 @@ export default function AddCustomerDialog() {
     interestRate: "",
     duration: "",
   });
+
+  const [saving, setSaving] = useState(false);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setFormData({
@@ -49,24 +55,37 @@ export default function AddCustomerDialog() {
   const dailyPayment = duration > 0 ? totalWithInterest / (duration * 30) : 0;
 
   async function handleSubmit() {
-    // Send the form data along with calculated values to the API
-    const res = await fetch("/api/customers", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...formData,
-        totalWithInterest,
-        monthlyPayment,
-        dailyPayment,
-      }),
-    });
+    try {
+      setSaving(true);
 
-    if (res.ok) {
-      // Show success message and reset the form
+      const res = await fetch("/api/customers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...formData,
+          loanAmount: loan,
+          interestRate: monthlyRate,
+          duration,
+          totalWithInterest,
+          monthlyPayment,
+          dailyPayment,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        toast.error(data.message || "Failed to save customer. Please try again.");
+        return;
+      }
+
       toast.success("Customer saved successfully!");
+      onCustomerSaved?.();
       setFormData({ name: "", contact: "", address: "", loanAmount: "", interestRate: "", duration: "" });
-    } else {
+    } catch {
       toast.error("Failed to save customer. Please try again.");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -80,7 +99,7 @@ export default function AddCustomerDialog() {
       </DialogTrigger>
 
       {/* Dialog */}
-      <DialogContent className="sm:max-w-[600px] rounded-2xl">
+      <DialogContent className="rounded-2xl sm:max-w-150">
         <DialogHeader>
           <DialogTitle>Add New Customer</DialogTitle>
           <Badge className="rounded-full p-3 bg-blue-50 text-blue-600 border border-blue-200">
@@ -171,8 +190,9 @@ export default function AddCustomerDialog() {
             type="button"
             onClick={handleSubmit}
             className="rounded-xl cursor-pointer"
+            disabled={saving}
           >
-            Save Customer
+            {saving ? "Saving..." : "Save Customer"}
           </Button>
         </div>
       </DialogContent>

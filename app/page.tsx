@@ -24,7 +24,7 @@ import { useRouter } from "next/navigation";
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
-  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
@@ -44,7 +44,7 @@ export default function Login() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name,
+          username,
           password,
         }),
       });
@@ -52,13 +52,15 @@ export default function Login() {
       const data = await res.json();
 
       if (!data.success) {
-        toast(data.message);
+        toast(data.message || "Login failed");
         return;
       }
 
-      // redirect to dashboard
-      router.push("/dashboard");
-    } catch (error) {
+      const destination =
+        data.user?.role === "officer" ? "/collections" : "/dashboard";
+
+      router.push(destination);
+    } catch {
       toast("Login failed");
     } finally {
       setLoading(false);
@@ -82,12 +84,12 @@ export default function Login() {
             <Label htmlFor="username">Username</Label>
 
             <Input
-              id="name"
+              id="username"
               type="text"
               placeholder="Enter username"
               className="h-12 rounded-xl"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
             />
           </div>
 

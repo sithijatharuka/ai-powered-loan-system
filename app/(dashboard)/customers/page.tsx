@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
 
@@ -17,31 +17,36 @@ import {
 } from "@/components/ui/table";
 import AddCustomerDialog from "@/components/AddCustomerDialog";
 
-const initialCustomers = [
-  {
-    id: 1,
-    name: "Kamal Perera",
-    contact: "0771234567",
-    address: "Colombo",
-    loanAmount: 50000,
-    interestRate: 12,
-    duration: "12 months",
-  },
-  {
-    id: 2,
-    name: "Nimal Silva",
-    contact: "0712345678",
-    address: "Kandy",
-    loanAmount: 75000,
-    interestRate: 10,
-    duration: "6 months",
-  },
-];
-
 export default function CustomersPage() {
   const [search, setSearch] = useState("");
+  const [customers, setCustomers] = useState<Array<any>>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredCustomers = initialCustomers.filter((c) =>
+  async function loadCustomers(searchTerm = search) {
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        `/api/customers${searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : ""}`
+      );
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setCustomers([]);
+        return;
+      }
+
+      setCustomers(data.customers ?? []);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadCustomers();
+  }, []);
+
+  const filteredCustomers = customers.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase()) ||
     c.contact.includes(search) ||
     c.address.toLowerCase().includes(search.toLowerCase())
@@ -72,13 +77,17 @@ export default function CustomersPage() {
               type="text"
               placeholder="Search by name, contact, address..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSearch(value);
+                void loadCustomers(value);
+              }}
               className="pl-10 h-10 rounded-xl"
             />
           </div>
 
           {/* Add Customer Button */}          
-          <AddCustomerDialog />
+          <AddCustomerDialog onCustomerSaved={() => void loadCustomers()} />
 
         </div>
 
@@ -103,7 +112,16 @@ export default function CustomersPage() {
 
           {/* Table Body */}
           <TableBody>
-            {filteredCustomers.length > 0 ? (
+            {loading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={8}
+                  className="h-24 text-center text-zinc-500"
+                >
+                  Loading customers...
+                </TableCell>
+              </TableRow>
+            ) : filteredCustomers.length > 0 ? (
               filteredCustomers.map((c) => (
                 <TableRow
                   key={c.id}
@@ -120,12 +138,12 @@ export default function CustomersPage() {
                   <TableCell>{c.address}</TableCell>
 
                   <TableCell>
-                    Rs. {c.loanAmount.toLocaleString()}
+                    Rs. {Number(c.loanAmount).toLocaleString()}
                   </TableCell>
 
                   <TableCell>{c.interestRate}%</TableCell>
 
-                  <TableCell>{c.duration}</TableCell>
+                  <TableCell>{c.duration} months</TableCell>
 
                   <TableCell className="text-right">
                     <Link href={`/customers/${c.id}`}>

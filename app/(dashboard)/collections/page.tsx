@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -23,40 +23,61 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-const customersData = [
-  {
-    id: 1,
-    name: "Kamal Perera",
-    contact: "0771234567",
-    balance: 30000,
-  },
-  {
-    id: 2,
-    name: "Nimal Silva",
-    contact: "0712345678",
-    balance: 45000,
-  },
-
-];
-
 export default function Collections() {
   const [search, setSearch] = useState("");
-
   const [amount, setAmount] = useState("");
+  const [customers, setCustomers] = useState<Array<any>>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filtered = customersData.filter((c) =>
+  async function loadCustomers(searchTerm = search) {
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        `/api/customers${searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : ""}`
+      );
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setCustomers([]);
+        return;
+      }
+
+      setCustomers(data.customers ?? []);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadCustomers();
+  }, []);
+
+  const filtered = customers.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase()) ||
     c.contact.includes(search)
   );
 
-  function handlePayment(customerId: number) {
-    console.log({
-      customerId,
-      amount,
-      date: new Date(),
+  async function handlePayment(customerId: string) {
+    const paymentAmount = Number(amount);
+
+    if (!Number.isFinite(paymentAmount) || paymentAmount <= 0) {
+      return;
+    }
+
+    const response = await fetch(`/api/customers/${customerId}/payments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        amount: paymentAmount,
+        date: new Date().toISOString(),
+      }),
     });
 
-    setAmount("");
+    if (response.ok) {
+      setAmount("");
+      void loadCustomers();
+    }
   }
 
   return (
@@ -73,7 +94,11 @@ export default function Collections() {
           placeholder="Search customer..."
           className="w-80"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            const value = e.target.value;
+            setSearch(value);
+            void loadCustomers(value);
+          }}
         />
 
       </div>
@@ -97,7 +122,13 @@ export default function Collections() {
 
           <TableBody>
 
-            {filtered.map((c) => (
+            {loading ? (
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center text-zinc-500">
+                  Loading collections...
+                </TableCell>
+              </TableRow>
+            ) : filtered.map((c) => (
 
               <TableRow key={c.id}>
 
@@ -111,7 +142,7 @@ export default function Collections() {
 
                 <TableCell>
                   <Badge variant="destructive">
-                    Rs. {c.balance.toLocaleString()}
+                    Rs. {(c.totalWithInterest - c.paidAmount).toLocaleString()}
                   </Badge>
                 </TableCell>
 
@@ -147,9 +178,7 @@ export default function Collections() {
 
                         <Button
                           className="w-full"
-                          onClick={() =>
-                            handlePayment(c.id)
-                          }
+                          onClick={() => handlePayment(c.id)}
                         >
                           Save Payment
                         </Button>

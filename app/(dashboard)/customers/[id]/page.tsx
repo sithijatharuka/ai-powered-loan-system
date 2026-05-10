@@ -15,7 +15,15 @@ import {
 } from "@/components/ui/table";
 
 import { Badge } from "@/components/ui/badge";
-import AddCustomerDialog from "@/components/AddCustomerDialog";
+import { connectToDb } from "@/lib/dbConnect";
+import { Customer } from "@/lib/model/customerModel";
+import { notFound } from "next/navigation";
+
+type CustomerTransaction = {
+  amount: number;
+  date: string | Date;
+  note?: string;
+};
 
 export default async function CustomerDetails({
   params,
@@ -24,26 +32,17 @@ export default async function CustomerDetails({
 }) {
 
   const { id: customerId } = await params;
-  // Mock data (later from MongoDB)
-  const customer = {
-    id: customerId,
-    name: "Kamal Perera",
-    contact: "0771234567",
-    address: "Colombo",
-    loanAmount: 50000,
-    interestRate: 12,
-    duration: 12,
-    paidAmount: 20000,
-    transactions: [
-      { date: "2026-01-01", amount: 5000 },
-      { date: "2026-02-01", amount: 5000 },
-      { date: "2026-03-01", amount: 10000 },
-    ],
-  };
+  await connectToDb();
+
+  const customer = await Customer.findById(customerId).lean();
+
+  if (!customer) {
+    notFound();
+  }
 
   const totalWithInterest =
-    customer.loanAmount +
-    (customer.loanAmount * customer.interestRate) / 100;
+    customer.totalWithInterest ??
+    customer.loanAmount + (customer.loanAmount * customer.interestRate * customer.duration) / 100;
 
   const remaining = totalWithInterest - customer.paidAmount;
 
@@ -73,7 +72,7 @@ export default async function CustomerDetails({
 
             <div>
               <p className="text-zinc-500">Customer ID</p>
-              <p className="font-medium">#{customer.id}</p>
+              <p className="font-medium">#{customer._id.toString()}</p>
             </div>
 
             <div>
@@ -189,10 +188,10 @@ export default async function CustomerDetails({
               </TableHeader>
 
               <TableBody>
-                {customer.transactions.map((t, i) => (
+                {(customer.transactions as CustomerTransaction[]).map((t, i) => (
                   <TableRow key={i}>
 
-                    <TableCell>{t.date}</TableCell>
+                    <TableCell>{new Date(t.date).toLocaleDateString()}</TableCell>
 
                     <TableCell className="font-medium text-green-600">
                       Rs. {t.amount.toLocaleString()}
