@@ -93,6 +93,7 @@ import {
   Banknote,
   FileText,
   Settings,
+  LogOut,
 } from "lucide-react";
 
 import {
@@ -106,6 +107,7 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 
 const menu = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -118,6 +120,11 @@ const menu = [
 
 export default function AppSidebar() {
   const pathname = usePathname();
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.href = "/";
+  }
 
   return (
     <Sidebar>
@@ -149,8 +156,20 @@ export default function AppSidebar() {
 
       {/* FOOTER */}
       <SidebarFooter>
-        <div className="text-xs text-muted-foreground p-4 border-t">
-          v1.0 • Loan Management System
+        <div className="space-y-3 border-t p-4">
+          <Button
+            type="button"
+            variant="destructive"
+            className="w-full justify-start gap-2 cursor-pointer"
+            onClick={handleLogout}
+          >
+            <LogOut size={16} />
+            Logout
+          </Button>
+
+          <div className="text-xs text-muted-foreground">
+            v1.0 • Loan Management System
+          </div>
         </div>
       </SidebarFooter>
     </Sidebar>

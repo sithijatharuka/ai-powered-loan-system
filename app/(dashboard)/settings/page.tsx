@@ -26,6 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { toast } from "sonner";
 
 const initialOfficers = [
   {
@@ -48,6 +49,7 @@ const initialOfficers = [
 
 export default function Settings() {
   const [officers, setOfficers] = useState(initialOfficers);
+  const [saving, setSaving] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -64,22 +66,54 @@ export default function Settings() {
     });
   }
 
-  function handleAddOfficer() {
-    const newOfficer = {
-      id: officers.length + 1,
-      ...formData,
-      status: "Active",
-    };
+  async function handleAddOfficer() {
+    try {
+      setSaving(true);
 
-    setOfficers([...officers, newOfficer]);
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: formData.name,
+          password: formData.password,
+          role: "officer",
+        }),
+      });
 
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      area: "",
-      password: "",
-    });
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        toast.error(data.message || "Failed to save officer");
+        return;
+      }
+
+      const newOfficer = {
+        id: officers.length + 1,
+        name: data.user.username,
+        email: formData.email,
+        phone: formData.phone,
+        area: formData.area,
+        status: "Active",
+      };
+
+      setOfficers([...officers, newOfficer]);
+
+      setFormData({
+        name: "",
+        email: "",
+        phone: "",
+        area: "",
+        password: "",
+      });
+
+      toast.success("Officer added successfully");
+    } catch {
+      toast.error("Failed to save officer");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -100,7 +134,7 @@ export default function Settings() {
             <Button className="rounded-xl">Add Collection Officer</Button>
           </DialogTrigger>
 
-          <DialogContent className="sm:max-w-[450px] rounded-2xl">
+          <DialogContent className="sm:max-w-112.5 rounded-2xl">
             <DialogHeader>
               <DialogTitle>Add Collection Officer</DialogTitle>
             </DialogHeader>
@@ -134,8 +168,12 @@ export default function Settings() {
 
             {/* FOOTER */}
             <div className="flex justify-end">
-              <Button onClick={handleAddOfficer} className="rounded-xl">
-                Save Officer
+              <Button
+                onClick={handleAddOfficer}
+                className="rounded-xl"
+                disabled={saving}
+              >
+                {saving ? "Saving..." : "Save Officer"}
               </Button>
             </div>
           </DialogContent>

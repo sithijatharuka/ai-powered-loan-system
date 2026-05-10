@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
 
@@ -17,50 +17,51 @@ import {
 } from "@/components/ui/table";
 import AddCustomerDialog from "@/components/AddCustomerDialog";
 
-const initialCustomers = [
-  {
-    id: 1,
-    name: "Kamal Perera",
-    contact: "0771234567",
-    address: "Colombo",
-    loanAmount: 50000,
-    interestRate: 12,
-    duration: "12 months",
-  },
-  {
-    id: 2,
-    name: "Nimal Silva",
-    contact: "0712345678",
-    address: "Kandy",
-    loanAmount: 75000,
-    interestRate: 10,
-    duration: "6 months",
-  },
-];
-
 export default function CustomersPage() {
   const [search, setSearch] = useState("");
+  const [customers, setCustomers] = useState<Array<any>>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredCustomers = initialCustomers.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.contact.includes(search) ||
-    c.address.toLowerCase().includes(search.toLowerCase())
+  async function loadCustomers(searchTerm = search) {
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        `/api/customers${searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : ""}`,
+      );
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setCustomers([]);
+        return;
+      }
+
+      setCustomers(data.customers ?? []);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadCustomers();
+  }, []);
+
+  const filteredCustomers = customers.filter(
+    (c) =>
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.contact.includes(search) ||
+      c.address.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
     <div className="w-full p-6 space-y-4">
-
       {/* Header */}
       <div className="flex items-center justify-between">
-
         {/* Title */}
-        <h1 className="text-2xl font-bold">
-          Customers
-        </h1>
+        <h1 className="text-2xl font-bold">Customers</h1>
 
         {/* Right Side */}
         <div className="flex items-center gap-3">
-
           {/* Search */}
           <div className="relative w-80">
             <Search
@@ -72,21 +73,22 @@ export default function CustomersPage() {
               type="text"
               placeholder="Search by name, contact, address..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSearch(value);
+                void loadCustomers(value);
+              }}
               className="pl-10 h-10 rounded-xl"
             />
           </div>
 
-          {/* Add Customer Button */}          
-          <AddCustomerDialog />
-
+          {/* Add Customer Button */}
+          <AddCustomerDialog onCustomerSaved={() => void loadCustomers()} />
         </div>
-
       </div>
       {/* Table */}
       <div className="rounded-xl border bg-white overflow-hidden">
         <Table>
-
           {/* Table Header */}
           <TableHeader className="bg-zinc-50">
             <TableRow>
@@ -103,15 +105,19 @@ export default function CustomersPage() {
 
           {/* Table Body */}
           <TableBody>
-            {filteredCustomers.length > 0 ? (
-              filteredCustomers.map((c) => (
-                <TableRow
-                  key={c.id}
-                  className="hover:bg-zinc-50 transition"
+            {loading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={8}
+                  className="h-24 text-center text-zinc-500"
                 >
-                  <TableCell className="font-medium">
-                    #{c.id}
-                  </TableCell>
+                  Loading customers...
+                </TableCell>
+              </TableRow>
+            ) : filteredCustomers.length > 0 ? (
+              filteredCustomers.map((c) => (
+                <TableRow key={c.id} className="hover:bg-zinc-50 transition">
+                  <TableCell className="font-medium">#{c.id}</TableCell>
 
                   <TableCell>{c.name}</TableCell>
 
@@ -120,19 +126,16 @@ export default function CustomersPage() {
                   <TableCell>{c.address}</TableCell>
 
                   <TableCell>
-                    Rs. {c.loanAmount.toLocaleString()}
+                    Rs. {Number(c.loanAmount).toLocaleString()}
                   </TableCell>
 
                   <TableCell>{c.interestRate}%</TableCell>
 
-                  <TableCell>{c.duration}</TableCell>
+                  <TableCell>{c.duration} months</TableCell>
 
                   <TableCell className="text-right">
                     <Link href={`/customers/${c.id}`}>
-                      <Button
-                        size="lg"
-                        className="rounded-lg cursor-pointer"
-                      >
+                      <Button size="lg" className="rounded-lg cursor-pointer">
                         View
                       </Button>
                     </Link>
@@ -150,7 +153,6 @@ export default function CustomersPage() {
               </TableRow>
             )}
           </TableBody>
-
         </Table>
       </div>
     </div>
