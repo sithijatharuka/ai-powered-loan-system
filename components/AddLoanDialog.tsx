@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -14,7 +20,10 @@ type AddLoanDialogProps = {
   customerName: string;
 };
 
-export default function AddLoanDialog({ customerId, customerName }: AddLoanDialogProps) {
+export default function AddLoanDialog({
+  customerId,
+  customerName,
+}: AddLoanDialogProps) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
@@ -75,7 +84,8 @@ export default function AddLoanDialog({ customerId, customerName }: AddLoanDialo
 
         <div className="space-y-4">
           <p className="text-sm text-zinc-500">
-            Add a fresh loan for {customerName}. The previous loan is already fully paid.
+            Add a fresh loan for {customerName}. The previous loan is already
+            fully paid.
           </p>
 
           <div className="space-y-2">
