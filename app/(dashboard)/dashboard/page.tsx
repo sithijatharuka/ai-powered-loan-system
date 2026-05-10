@@ -2,12 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import {
   Table,
@@ -68,7 +63,6 @@ export default function Dashboard() {
 
   return (
     <div className="p-6 space-y-6">
-
       {/* TITLE */}
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
@@ -79,7 +73,6 @@ export default function Dashboard() {
 
       {/* STATS CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-
         <Card>
           <CardHeader>
             <CardTitle>Total Loan Amount Given</CardTitle>
@@ -124,7 +117,6 @@ export default function Dashboard() {
             Rs. {profitFromLoanInterest.toLocaleString()}
           </CardContent>
         </Card>
-
       </div>
 
       {/* RECENT TRANSACTIONS */}
@@ -134,9 +126,7 @@ export default function Dashboard() {
         </CardHeader>
 
         <CardContent>
-
           <Table>
-
             <TableHeader>
               <TableRow>
                 <TableHead>Customer</TableHead>
@@ -146,30 +136,34 @@ export default function Dashboard() {
             </TableHeader>
 
             <TableBody>
-              {recentTransactions.length > 0 ? recentTransactions.map((t) => (
-                <TableRow key={`${t.customerId}-${t.date}-${t.amount}`}>
-                  <TableCell>
-                    #{t.customerId} • {t.customerName}
-                  </TableCell>
-                  <TableCell>{new Date(t.date).toLocaleDateString()}</TableCell>
-                  <TableCell className="text-green-600 font-medium">
-                    Rs. {t.amount.toLocaleString()}
-                  </TableCell>
-                </TableRow>
-              )) : (
+              {recentTransactions.length > 0 ? (
+                recentTransactions.map((t) => (
+                  <TableRow key={`${t.customerId}-${t.date}-${t.amount}`}>
+                    <TableCell>
+                      #{t.customerId} • {t.customerName}
+                    </TableCell>
+                    <TableCell>
+                      {new Date(t.date).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-green-600 font-medium">
+                      Rs. {t.amount.toLocaleString()}
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
                 <TableRow>
-                  <TableCell colSpan={3} className="h-24 text-center text-zinc-500">
+                  <TableCell
+                    colSpan={3}
+                    className="h-24 text-center text-zinc-500"
+                  >
                     No transactions yet
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
-
           </Table>
-
         </CardContent>
       </Card>
-
     </div>
   );
 }

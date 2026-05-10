@@ -34,7 +34,9 @@ export default async function CustomerDetails({
 
   await connectToDb();
 
-  const customer = await Customer.findOne({ customerId: numericCustomerId }).lean();
+  const customer = await Customer.findOne({
+    customerId: numericCustomerId,
+  }).lean();
 
   if (!customer) {
     notFound();

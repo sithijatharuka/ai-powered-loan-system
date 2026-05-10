@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
             (duration > 0 ? totalWithInterest / (duration * 30) : 0);
 
         await connectToDb();
-    await backfillCustomerIds();
+        await backfillCustomerIds();
 
         const customer = await Customer.create({
             name,
