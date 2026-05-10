@@ -15,6 +15,50 @@ function sanitizeRole(role: unknown): UserRole {
     return role === "admin" ? "admin" : "officer";
 }
 
+export async function GET(request: NextRequest) {
+    try {
+        const currentUser = getAuthUser(request);
+
+        if (!currentUser) {
+            return NextResponse.json(
+                { success: false, message: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
+        if (currentUser.role !== "admin") {
+            return NextResponse.json(
+                { success: false, message: "Forbidden" },
+                { status: 403 }
+            );
+        }
+
+        await connectToDb();
+
+        const roleQuery = request.nextUrl.searchParams.get("role");
+        const query = roleQuery ? { role: sanitizeRole(roleQuery) } : {};
+
+        const users = await User.find(query).sort({ createdAt: -1 });
+
+        return NextResponse.json({
+            success: true,
+            users: users.map((user) => ({
+                id: user._id.toString(),
+                username: user.username,
+                role: user.role,
+                createdAt: user.createdAt,
+            })),
+        });
+    } catch (error) {
+        console.error("Users list error:", error);
+
+        return NextResponse.json(
+            { success: false, message: "Failed to fetch users" },
+            { status: 500 }
+        );
+    }
+}
+
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json().catch(() => null);

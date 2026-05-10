@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
@@ -28,27 +28,16 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 
-const initialOfficers = [
-  {
-    id: 1,
-    name: "Saman Kumara",
-    email: "saman@gmail.com",
-    phone: "0771234567",
-    area: "Colombo",
-    status: "Active",
-  },
-  {
-    id: 2,
-    name: "Kasun Silva",
-    email: "kasun@gmail.com",
-    phone: "0712345678",
-    area: "Kandy",
-    status: "Active",
-  },
-];
+type Officer = {
+  id: string;
+  username: string;
+  role: "admin" | "officer";
+  createdAt?: string;
+};
 
 export default function Settings() {
-  const [officers, setOfficers] = useState(initialOfficers);
+  const [officers, setOfficers] = useState<Officer[]>([]);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -58,6 +47,32 @@ export default function Settings() {
     area: "",
     password: "",
   });
+
+  async function loadOfficers() {
+    setLoading(true);
+
+    try {
+      const response = await fetch("/api/auth/register?role=officer");
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        toast.error(data.message || "Failed to load officers");
+        setOfficers([]);
+        return;
+      }
+
+      setOfficers((data.users ?? []) as Officer[]);
+    } catch {
+      toast.error("Failed to load officers");
+      setOfficers([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadOfficers();
+  }, []);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setFormData({
@@ -89,16 +104,7 @@ export default function Settings() {
         return;
       }
 
-      const newOfficer = {
-        id: officers.length + 1,
-        name: data.user.username,
-        email: formData.email,
-        phone: formData.phone,
-        area: formData.area,
-        status: "Active",
-      };
-
-      setOfficers([...officers, newOfficer]);
+      await loadOfficers();
 
       setFormData({
         name: "",
@@ -196,21 +202,35 @@ export default function Settings() {
 
                   <TableHead>Name</TableHead>
 
-                  <TableHead>Phone</TableHead>
+                  <TableHead>Role</TableHead>
                 </TableRow>
               </TableHeader>
 
               {/* BODY */}
               <TableBody>
-                {officers.map((officer) => (
-                  <TableRow key={officer.id}>
-                    <TableCell className="font-medium">#{officer.id}</TableCell>
-
-                    <TableCell>{officer.name}</TableCell>
-
-                    <TableCell>{officer.phone}</TableCell>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="h-24 text-center text-zinc-500">
+                      Loading officers...
+                    </TableCell>
                   </TableRow>
-                ))}
+                ) : officers.length > 0 ? (
+                  officers.map((officer) => (
+                    <TableRow key={officer.id}>
+                      <TableCell className="font-medium">#{officer.id.slice(-6)}</TableCell>
+
+                      <TableCell>{officer.username}</TableCell>
+
+                      <TableCell className="capitalize">{officer.role}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} className="h-24 text-center text-zinc-500">
+                      No officers found
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>
