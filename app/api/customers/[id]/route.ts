@@ -105,6 +105,84 @@ export async function PUT(
 
         await connectToDb();
 
+        const existingCustomer = await Customer.findOne({ customerId });
+
+        if (!existingCustomer) {
+            return NextResponse.json(
+                { success: false, message: "Customer not found" },
+                { status: 404 }
+            );
+        }
+
+        if (body?.newLoan) {
+            const remainingBalance =
+                Number(existingCustomer.totalWithInterest || 0) -
+                Number(existingCustomer.paidAmount || 0);
+
+            if (remainingBalance > 0) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: "Previous loan must be fully paid before adding a new loan",
+                    },
+                    { status: 400 }
+                );
+            }
+
+            const loanAmount = Number.isFinite(Number(body?.loanAmount))
+                ? Number(body.loanAmount)
+                : NaN;
+            const interestRate = Number.isFinite(Number(body?.interestRate))
+                ? Number(body.interestRate)
+                : NaN;
+            const duration = Number.isFinite(Number(body?.duration))
+                ? Number(body.duration)
+                : NaN;
+
+            if ([loanAmount, interestRate, duration].some((value) => Number.isNaN(value))) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        message: "Loan amount, interest rate, and duration are required",
+                    },
+                    { status: 400 }
+                );
+            }
+
+            const totalWithInterest =
+                Number(body?.totalWithInterest) ||
+                loanAmount + loanAmount * (interestRate / 100) * duration;
+            const monthlyPayment =
+                Number(body?.monthlyPayment) || (duration > 0 ? totalWithInterest / duration : 0);
+            const dailyPayment =
+                Number(body?.dailyPayment) ||
+                (duration > 0 ? totalWithInterest / (duration * 30) : 0);
+
+            const customer = await Customer.findOneAndUpdate(
+                { customerId },
+                {
+                    name: body?.name ?? existingCustomer.name,
+                    contact: body?.contact ?? existingCustomer.contact,
+                    address: body?.address ?? existingCustomer.address,
+                    loanAmount,
+                    interestRate,
+                    duration,
+                    totalWithInterest,
+                    monthlyPayment,
+                    dailyPayment,
+                    paidAmount: 0,
+                    transactions: [],
+                },
+                { returnDocument: "after" }
+            );
+
+            return NextResponse.json({
+                success: true,
+                message: "New loan added successfully",
+                customer: serializeCustomer(customer),
+            });
+        }
+
         const update = {
             name: body?.name,
             contact: body?.contact,
@@ -129,13 +207,6 @@ export async function PUT(
             update,
             { returnDocument: "after" }
         );
-
-        if (!customer) {
-            return NextResponse.json(
-                { success: false, message: "Customer not found" },
-                { status: 404 }
-            );
-        }
 
         return NextResponse.json({
             success: true,

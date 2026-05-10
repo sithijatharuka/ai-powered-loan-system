@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { connectToDb } from "@/lib/dbConnect";
 import { Customer } from "@/lib/model/customerModel";
 import { notFound } from "next/navigation";
+import AddLoanDialog from "@/components/AddLoanDialog";
 
 type CustomerTransaction = {
   amount: number;
@@ -48,6 +49,7 @@ export default async function CustomerDetails({
       (customer.loanAmount * customer.interestRate * customer.duration) / 100;
 
   const remaining = totalWithInterest - customer.paidAmount;
+  const isLoanComplete = remaining <= 0;
 
   return (
     <div className="p-6 space-y-6">
@@ -149,6 +151,19 @@ export default async function CustomerDetails({
             <p className="font-semibold text-red-600">
               Rs. {remaining.toLocaleString()}
             </p>
+          </div>
+
+          <div className="pt-2">
+            {isLoanComplete ? (
+              <AddLoanDialog
+                customerId={customer.customerId}
+                customerName={customer.name}
+              />
+            ) : (
+              <p className="text-sm text-zinc-500">
+                Complete the current loan before adding a new one.
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
