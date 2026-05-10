@@ -55,6 +55,7 @@ export default function Collections() {
 
   const filtered = customers.filter(
     (c) =>
+      String(c.id).includes(search) ||
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.contact.includes(search),
   );
@@ -88,7 +89,7 @@ export default function Collections() {
         <h1 className="text-2xl font-bold">Collections</h1>
 
         <Input
-          placeholder="Search customer..."
+          placeholder="Search by ID or customer..."
           className="w-80"
           value={search}
           onChange={(e) => {

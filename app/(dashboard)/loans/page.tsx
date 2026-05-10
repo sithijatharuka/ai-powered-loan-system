@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -12,41 +14,49 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const loans = [
-  {
-    id: 1,
-    customer: "Kamal Perera",
-    loanAmount: 100000,
-    interestRate: 8,
-    duration: 12,
-    paid: 40000,
-  },
-  {
-    id: 2,
-    customer: "Nimal Silva",
-    loanAmount: 75000,
-    interestRate: 10,
-    duration: 6,
-    paid: 20000,
-  },
-];
+type LoanRow = {
+  id: number;
+  name: string;
+  loanAmount: number;
+  interestRate: number;
+  duration: number;
+  totalWithInterest: number;
+  paidAmount: number;
+};
 
 export default function Loans() {
+  const [loans, setLoans] = useState<LoanRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadLoans() {
+      setLoading(true);
+
+      try {
+        const response = await fetch("/api/customers");
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          setLoans([]);
+          return;
+        }
+
+        setLoans((data.customers ?? []) as LoanRow[]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    void loadLoans();
+  }, []);
+
   return (
     <div className="p-6 space-y-6">
-
       {/* HEADER */}
       <div>
-        <h1 className="text-3xl font-bold">
-          Loans
-        </h1>
+        <h1 className="text-3xl font-bold">Loans</h1>
 
         <p className="text-sm text-muted-foreground">
           Individual customer loan details
@@ -55,23 +65,16 @@ export default function Loans() {
 
       {/* TABLE CARD */}
       <Card className="rounded-2xl">
-
         <CardHeader>
-          <CardTitle>
-            Active Loans
-          </CardTitle>
+          <CardTitle>Active Loans</CardTitle>
         </CardHeader>
 
         <CardContent>
-
           <div className="border rounded-xl overflow-hidden">
-
             <Table>
-
               {/* TABLE HEADER */}
               <TableHeader className="bg-zinc-50">
                 <TableRow>
-
                   <TableHead>ID</TableHead>
 
                   <TableHead>Customer</TableHead>
@@ -88,102 +91,84 @@ export default function Loans() {
 
                   <TableHead>Status</TableHead>
 
-                  <TableHead className="text-right">
-                    Action
-                  </TableHead>
-
+                  <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
 
               {/* TABLE BODY */}
               <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={9}
+                      className="h-24 text-center text-zinc-500"
+                    >
+                      Loading loans...
+                    </TableCell>
+                  </TableRow>
+                ) : loans.length > 0 ? (
+                  loans.map((loan) => {
+                    const totalPayable = loan.totalWithInterest;
 
-                {loans.map((loan) => {
+                    const remaining = totalPayable - loan.paidAmount;
 
-                  const totalInterest =
-                    loan.loanAmount *
-                    (loan.interestRate / 100) *
-                    loan.duration;
+                    const completed = remaining <= 0;
 
-                  const totalPayable =
-                    loan.loanAmount + totalInterest;
+                    return (
+                      <TableRow key={loan.id}>
+                        <TableCell className="font-medium">
+                          #{loan.id}
+                        </TableCell>
 
-                  const remaining =
-                    totalPayable - loan.paid;
+                        <TableCell>{loan.name}</TableCell>
 
-                  const completed =
-                    remaining <= 0;
+                        <TableCell>
+                          Rs. {loan.loanAmount.toLocaleString()}
+                        </TableCell>
 
-                  return (
-                    <TableRow key={loan.id}>
+                        <TableCell>{loan.interestRate}%</TableCell>
 
-                      <TableCell className="font-medium">
-                        #{loan.id}
-                      </TableCell>
+                        <TableCell>{loan.duration} Months</TableCell>
 
-                      <TableCell>
-                        {loan.customer}
-                      </TableCell>
+                        <TableCell className="font-medium text-blue-600">
+                          Rs. {totalPayable.toLocaleString()}
+                        </TableCell>
 
-                      <TableCell>
-                        Rs. {loan.loanAmount.toLocaleString()}
-                      </TableCell>
+                        <TableCell className="text-red-600 font-medium">
+                          Rs. {remaining.toLocaleString()}
+                        </TableCell>
 
-                      <TableCell>
-                        {loan.interestRate}%
-                      </TableCell>
+                        <TableCell>
+                          {completed ? (
+                            <Badge>Completed</Badge>
+                          ) : (
+                            <Badge variant="destructive">Active</Badge>
+                          )}
+                        </TableCell>
 
-                      <TableCell>
-                        {loan.duration} Months
-                      </TableCell>
-
-                      <TableCell className="font-medium text-blue-600">
-                        Rs. {totalPayable.toLocaleString()}
-                      </TableCell>
-
-                      <TableCell className="text-red-600 font-medium">
-                        Rs. {remaining.toLocaleString()}
-                      </TableCell>
-
-                      <TableCell>
-
-                        {completed ? (
-                          <Badge>
-                            Completed
-                          </Badge>
-                        ) : (
-                          <Badge variant="destructive">
-                            Active
-                          </Badge>
-                        )}
-
-                      </TableCell>
-
-                      <TableCell className="text-right">
-
-                        <Button
-                          size="sm"
-                          className="rounded-lg"
-                        >
-                          View
-                        </Button>
-
-                      </TableCell>
-
-                    </TableRow>
-                  );
-                })}
-
+                        <TableCell className="text-right">
+                          <Button size="sm" className="rounded-lg">
+                            View
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={9}
+                      className="h-24 text-center text-zinc-500"
+                    >
+                      No loans found
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
-
             </Table>
-
           </div>
-
         </CardContent>
-
       </Card>
-
     </div>
   );
 }

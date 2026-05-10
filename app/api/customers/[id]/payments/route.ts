@@ -11,6 +11,15 @@ export async function POST(
 ) {
     try {
         const { id } = await params;
+        const customerId = Number(id);
+
+        if (!Number.isInteger(customerId) || customerId <= 0) {
+            return NextResponse.json(
+                { success: false, message: "Invalid customer ID" },
+                { status: 400 }
+            );
+        }
+
         const body = await request.json().catch(() => null);
         const amount = Number(body?.amount);
 
@@ -23,7 +32,7 @@ export async function POST(
 
         await connectToDb();
 
-        const customer = await Customer.findById(id);
+        const customer = await Customer.findOne({ customerId });
 
         if (!customer) {
             return NextResponse.json(
@@ -45,7 +54,7 @@ export async function POST(
             success: true,
             message: "Payment recorded successfully",
             customer: {
-                id: customer._id.toString(),
+                id: customer.customerId,
                 paidAmount: customer.paidAmount,
                 transactions: customer.transactions,
             },

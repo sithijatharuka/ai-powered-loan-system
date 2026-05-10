@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { connectToDb } from "@/lib/dbConnect";
+import { Counter } from "@/lib/model/counterModel";
 import { Customer } from "@/lib/model/customerModel";
 
 export const runtime = "nodejs";
@@ -11,6 +12,7 @@ function toNumber(value: unknown) {
 }
 
 function serializeCustomer(customer: {
+    customerId?: number;
     _id: { toString(): string };
     name: string;
     contact: string;
@@ -27,7 +29,8 @@ function serializeCustomer(customer: {
     updatedAt?: Date;
 }) {
     return {
-        id: customer._id.toString(),
+        id: customer.customerId,
+        mongoId: customer._id.toString(),
         name: customer.name,
         contact: customer.contact,
         address: customer.address,
@@ -44,15 +47,50 @@ function serializeCustomer(customer: {
     };
 }
 
+async function backfillCustomerIds() {
+    const customersWithoutId = await Customer.find({ customerId: { $exists: false } }).sort({ createdAt: 1 });
+
+    if (customersWithoutId.length === 0) {
+        return;
+    }
+
+    const existingMax = await Customer.findOne({ customerId: { $exists: true } })
+        .sort({ customerId: -1 })
+        .select("customerId");
+
+    const maxCustomerId = existingMax?.customerId ?? 0;
+
+    await Counter.findOneAndUpdate(
+        { name: "customerId" },
+        { $max: { seq: maxCustomerId } },
+        { upsert: true, returnDocument: "after" },
+    );
+
+    for (const customer of customersWithoutId) {
+        const counter = await Counter.findOneAndUpdate(
+            { name: "customerId" },
+            { $inc: { seq: 1 } },
+            { upsert: true, returnDocument: "after" },
+        );
+
+        customer.customerId = counter.seq;
+        await customer.save();
+    }
+}
+
 export async function GET(request: NextRequest) {
     try {
         await connectToDb();
+        await backfillCustomerIds();
 
         const search = request.nextUrl.searchParams.get("search")?.trim() ?? "";
+        const numericSearch = Number(search);
+        const hasNumericSearch = search !== "" && Number.isInteger(numericSearch);
 
         const query = search
             ? {
                 $or: [
+                    ...(hasNumericSearch ? [{ customerId: numericSearch }] : []),
                     { name: { $regex: search, $options: "i" } },
                     { contact: { $regex: search, $options: "i" } },
                     { address: { $regex: search, $options: "i" } },
@@ -110,6 +148,7 @@ export async function POST(request: NextRequest) {
             (duration > 0 ? totalWithInterest / (duration * 30) : 0);
 
         await connectToDb();
+        await backfillCustomerIds();
 
         const customer = await Customer.create({
             name,
