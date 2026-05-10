@@ -24,6 +24,19 @@ function serializeCustomer(customer: {
     dailyPayment: number;
     paidAmount: number;
     transactions: Array<{ amount: number; date: Date; note?: string }>;
+    loanHistory?: Array<{
+        loanAmount: number;
+        interestRate: number;
+        duration: number;
+        totalWithInterest: number;
+        monthlyPayment: number;
+        dailyPayment: number;
+        paidAmount: number;
+        transactions: Array<{ amount: number; date: Date; note?: string }>;
+        status?: "ongoing" | "completed";
+        openedAt?: Date;
+        closedAt?: Date;
+    }>;
     createdAt?: Date;
     updatedAt?: Date;
 }) {
@@ -41,8 +54,42 @@ function serializeCustomer(customer: {
         dailyPayment: customer.dailyPayment,
         paidAmount: customer.paidAmount,
         transactions: customer.transactions,
+        loanHistory: customer.loanHistory ?? [],
         createdAt: customer.createdAt,
         updatedAt: customer.updatedAt,
+    };
+}
+
+function buildLoanSnapshot(customer: {
+    loanAmount: number;
+    interestRate: number;
+    duration: number;
+    totalWithInterest: number;
+    monthlyPayment: number;
+    dailyPayment: number;
+    paidAmount: number;
+    transactions: Array<{ amount: number; date: Date; note?: string }>;
+    createdAt?: Date;
+    updatedAt?: Date;
+    loanHistory?: Array<any>;
+}) {
+    const remaining = Math.max(
+        Number(customer.totalWithInterest || 0) - Number(customer.paidAmount || 0),
+        0
+    );
+
+    return {
+        loanAmount: customer.loanAmount,
+        interestRate: customer.interestRate,
+        duration: customer.duration,
+        totalWithInterest: customer.totalWithInterest,
+        monthlyPayment: customer.monthlyPayment,
+        dailyPayment: customer.dailyPayment,
+        paidAmount: customer.paidAmount,
+        transactions: customer.transactions,
+        status: remaining > 0 ? ("ongoing" as const) : ("completed" as const),
+        openedAt: customer.createdAt,
+        closedAt: remaining > 0 ? undefined : customer.updatedAt,
     };
 }
 
@@ -158,6 +205,12 @@ export async function PUT(
                 Number(body?.dailyPayment) ||
                 (duration > 0 ? totalWithInterest / (duration * 30) : 0);
 
+            const completedLoan = buildLoanSnapshot(existingCustomer);
+            const loanHistory = [
+                ...(existingCustomer.loanHistory ?? []),
+                completedLoan,
+            ];
+
             const customer = await Customer.findOneAndUpdate(
                 { customerId },
                 {
@@ -172,6 +225,7 @@ export async function PUT(
                     dailyPayment,
                     paidAmount: 0,
                     transactions: [],
+                    loanHistory,
                 },
                 { returnDocument: "after" }
             );
