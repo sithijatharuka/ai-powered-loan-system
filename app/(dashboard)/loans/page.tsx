@@ -14,15 +14,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type LoanRow = {
-  id: string;
+  id: number;
   name: string;
   loanAmount: number;
   interestRate: number;
@@ -59,12 +54,9 @@ export default function Loans() {
 
   return (
     <div className="p-6 space-y-6">
-
       {/* HEADER */}
       <div>
-        <h1 className="text-3xl font-bold">
-          Loans
-        </h1>
+        <h1 className="text-3xl font-bold">Loans</h1>
 
         <p className="text-sm text-muted-foreground">
           Individual customer loan details
@@ -73,23 +65,16 @@ export default function Loans() {
 
       {/* TABLE CARD */}
       <Card className="rounded-2xl">
-
         <CardHeader>
-          <CardTitle>
-            Active Loans
-          </CardTitle>
+          <CardTitle>Active Loans</CardTitle>
         </CardHeader>
 
         <CardContent>
-
           <div className="border rounded-xl overflow-hidden">
-
             <Table>
-
               {/* TABLE HEADER */}
               <TableHeader className="bg-zinc-50">
                 <TableRow>
-
                   <TableHead>ID</TableHead>
 
                   <TableHead>Customer</TableHead>
@@ -106,55 +91,44 @@ export default function Loans() {
 
                   <TableHead>Status</TableHead>
 
-                  <TableHead className="text-right">
-                    Action
-                  </TableHead>
-
+                  <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
 
               {/* TABLE BODY */}
               <TableBody>
-
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="h-24 text-center text-zinc-500">
+                    <TableCell
+                      colSpan={9}
+                      className="h-24 text-center text-zinc-500"
+                    >
                       Loading loans...
                     </TableCell>
                   </TableRow>
                 ) : loans.length > 0 ? (
                   loans.map((loan) => {
-
                     const totalPayable = loan.totalWithInterest;
 
-                    const remaining =
-                      totalPayable - loan.paidAmount;
+                    const remaining = totalPayable - loan.paidAmount;
 
-                    const completed =
-                      remaining <= 0;
+                    const completed = remaining <= 0;
 
                     return (
                       <TableRow key={loan.id}>
-
                         <TableCell className="font-medium">
-                          #{loan.id.slice(-6)}
+                          #{loan.id}
                         </TableCell>
 
-                        <TableCell>
-                          {loan.name}
-                        </TableCell>
+                        <TableCell>{loan.name}</TableCell>
 
                         <TableCell>
                           Rs. {loan.loanAmount.toLocaleString()}
                         </TableCell>
 
-                        <TableCell>
-                          {loan.interestRate}%
-                        </TableCell>
+                        <TableCell>{loan.interestRate}%</TableCell>
 
-                        <TableCell>
-                          {loan.duration} Months
-                        </TableCell>
+                        <TableCell>{loan.duration} Months</TableCell>
 
                         <TableCell className="font-medium text-blue-600">
                           Rs. {totalPayable.toLocaleString()}
@@ -165,51 +139,36 @@ export default function Loans() {
                         </TableCell>
 
                         <TableCell>
-
                           {completed ? (
-                            <Badge>
-                              Completed
-                            </Badge>
+                            <Badge>Completed</Badge>
                           ) : (
-                            <Badge variant="destructive">
-                              Active
-                            </Badge>
+                            <Badge variant="destructive">Active</Badge>
                           )}
-
                         </TableCell>
 
                         <TableCell className="text-right">
-
-                          <Button
-                            size="sm"
-                            className="rounded-lg"
-                          >
+                          <Button size="sm" className="rounded-lg">
                             View
                           </Button>
-
                         </TableCell>
-
                       </TableRow>
                     );
                   })
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={9} className="h-24 text-center text-zinc-500">
+                    <TableCell
+                      colSpan={9}
+                      className="h-24 text-center text-zinc-500"
+                    >
                       No loans found
                     </TableCell>
                   </TableRow>
                 )}
-
               </TableBody>
-
             </Table>
-
           </div>
-
         </CardContent>
-
       </Card>
-
     </div>
   );
 }

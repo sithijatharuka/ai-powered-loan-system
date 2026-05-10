@@ -26,9 +26,15 @@ export default async function CustomerDetails({
   params: Promise<{ id: string }>;
 }) {
   const { id: customerId } = await params;
+  const numericCustomerId = Number(customerId);
+
+  if (!Number.isInteger(numericCustomerId) || numericCustomerId <= 0) {
+    notFound();
+  }
+
   await connectToDb();
 
-  const customer = await Customer.findById(customerId).lean();
+  const customer = await Customer.findOne({ customerId: numericCustomerId }).lean();
 
   if (!customer) {
     notFound();
@@ -62,7 +68,7 @@ export default async function CustomerDetails({
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-zinc-500">Customer ID</p>
-              <p className="font-medium">#{customer._id.toString()}</p>
+              <p className="font-medium">#{customer.customerId}</p>
             </div>
 
             <div>

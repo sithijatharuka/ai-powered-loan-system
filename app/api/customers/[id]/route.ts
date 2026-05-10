@@ -11,6 +11,7 @@ function toNumber(value: unknown) {
 }
 
 function serializeCustomer(customer: {
+    customerId?: number;
     _id: { toString(): string };
     name: string;
     contact: string;
@@ -27,7 +28,8 @@ function serializeCustomer(customer: {
     updatedAt?: Date;
 }) {
     return {
-        id: customer._id.toString(),
+        id: customer.customerId,
+        mongoId: customer._id.toString(),
         name: customer.name,
         contact: customer.contact,
         address: customer.address,
@@ -50,9 +52,18 @@ export async function GET(
 ) {
     try {
         const { id } = await params;
+        const customerId = Number(id);
+
+        if (!Number.isInteger(customerId) || customerId <= 0) {
+            return NextResponse.json(
+                { success: false, message: "Invalid customer ID" },
+                { status: 400 }
+            );
+        }
+
         await connectToDb();
 
-        const customer = await Customer.findById(id);
+        const customer = await Customer.findOne({ customerId });
 
         if (!customer) {
             return NextResponse.json(
@@ -81,6 +92,15 @@ export async function PUT(
 ) {
     try {
         const { id } = await params;
+        const customerId = Number(id);
+
+        if (!Number.isInteger(customerId) || customerId <= 0) {
+            return NextResponse.json(
+                { success: false, message: "Invalid customer ID" },
+                { status: 400 }
+            );
+        }
+
         const body = await request.json().catch(() => null);
 
         await connectToDb();
@@ -104,7 +124,11 @@ export async function PUT(
             }
         });
 
-        const customer = await Customer.findByIdAndUpdate(id, update, { new: true });
+        const customer = await Customer.findOneAndUpdate(
+            { customerId },
+            update,
+            { returnDocument: "after" }
+        );
 
         if (!customer) {
             return NextResponse.json(
@@ -133,9 +157,18 @@ export async function DELETE(
 ) {
     try {
         const { id } = await params;
+        const customerId = Number(id);
+
+        if (!Number.isInteger(customerId) || customerId <= 0) {
+            return NextResponse.json(
+                { success: false, message: "Invalid customer ID" },
+                { status: 400 }
+            );
+        }
+
         await connectToDb();
 
-        const customer = await Customer.findByIdAndDelete(id);
+        const customer = await Customer.findOneAndDelete({ customerId });
 
         if (!customer) {
             return NextResponse.json(

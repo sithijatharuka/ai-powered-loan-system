@@ -48,6 +48,7 @@ export default function CustomersPage() {
 
   const filteredCustomers = customers.filter(
     (c) =>
+      String(c.id).includes(search) ||
       c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.contact.includes(search) ||
       c.address.toLowerCase().includes(search.toLowerCase()),
@@ -71,7 +72,7 @@ export default function CustomersPage() {
 
             <Input
               type="text"
-              placeholder="Search by name, contact, address..."
+              placeholder="Search by ID, name, contact, address..."
               value={search}
               onChange={(e) => {
                 const value = e.target.value;
@@ -92,7 +93,7 @@ export default function CustomersPage() {
           {/* Table Header */}
           <TableHeader className="bg-zinc-50">
             <TableRow>
-              <TableHead className="w-[80px]">ID</TableHead>
+              <TableHead className="w-20">ID</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Contact</TableHead>
               <TableHead>Address</TableHead>
@@ -115,8 +116,11 @@ export default function CustomersPage() {
                 </TableCell>
               </TableRow>
             ) : filteredCustomers.length > 0 ? (
-              filteredCustomers.map((c) => (
-                <TableRow key={c.id} className="hover:bg-zinc-50 transition">
+              filteredCustomers.map((c, index) => (
+                <TableRow
+                  key={`${String(c.id ?? "missing")}-${String(c.mongoId ?? index)}`}
+                  className="hover:bg-zinc-50 transition"
+                >
                   <TableCell className="font-medium">#{c.id}</TableCell>
 
                   <TableCell>{c.name}</TableCell>

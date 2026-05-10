@@ -210,23 +210,33 @@ export default function Settings() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={3} className="h-24 text-center text-zinc-500">
+                    <TableCell
+                      colSpan={3}
+                      className="h-24 text-center text-zinc-500"
+                    >
                       Loading officers...
                     </TableCell>
                   </TableRow>
                 ) : officers.length > 0 ? (
                   officers.map((officer) => (
                     <TableRow key={officer.id}>
-                      <TableCell className="font-medium">#{officer.id.slice(-6)}</TableCell>
+                      <TableCell className="font-medium">
+                        #{officer.id.slice(-6)}
+                      </TableCell>
 
                       <TableCell>{officer.username}</TableCell>
 
-                      <TableCell className="capitalize">{officer.role}</TableCell>
+                      <TableCell className="capitalize">
+                        {officer.role}
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={3} className="h-24 text-center text-zinc-500">
+                    <TableCell
+                      colSpan={3}
+                      className="h-24 text-center text-zinc-500"
+                    >
                       No officers found
                     </TableCell>
                   </TableRow>

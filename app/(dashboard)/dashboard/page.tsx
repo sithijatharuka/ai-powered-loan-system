@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import {
   Card,
   CardContent,
@@ -16,19 +18,53 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export default function Dashboard() {
-  // MOCK DATA (later from DB)
-  const totalLoanGiven = 250000;
-  const totalCollected = 120000;
-  const pendingLoan = totalLoanGiven - totalCollected;
-  const activeCustomers = 12;
-  const profit = 45000;
+type DashboardSummary = {
+  totalLoanGiven: number;
+  totalCollected: number;
+  pendingLoan: number;
+  activeCustomers: number;
+  profitFromLoanInterest: number;
+  recentTransactions: Array<{
+    customerId: number;
+    customerName: string;
+    amount: number;
+    date: string;
+    note?: string;
+  }>;
+};
 
-  const recentTransactions = [
-    { id: 1, name: "Kamal Perera", amount: 5000, date: "2026-01-01" },
-    { id: 2, name: "Nimal Silva", amount: 10000, date: "2026-01-03" },
-    { id: 3, name: "Saman Kumara", amount: 7000, date: "2026-01-05" },
-  ];
+export default function Dashboard() {
+  const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadSummary() {
+      setLoading(true);
+
+      try {
+        const response = await fetch("/api/dashboard/summary");
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          setSummary(null);
+          return;
+        }
+
+        setSummary(data.summary as DashboardSummary);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    void loadSummary();
+  }, []);
+
+  const totalLoanGiven = summary?.totalLoanGiven ?? 0;
+  const totalCollected = summary?.totalCollected ?? 0;
+  const pendingLoan = summary?.pendingLoan ?? 0;
+  const activeCustomers = summary?.activeCustomers ?? 0;
+  const profitFromLoanInterest = summary?.profitFromLoanInterest ?? 0;
+  const recentTransactions = summary?.recentTransactions ?? [];
 
   return (
     <div className="p-6 space-y-6">
@@ -37,16 +73,16 @@ export default function Dashboard() {
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-sm text-muted-foreground">
-          Loan analytics overview
+          Live loan portfolio overview from MongoDB
         </p>
       </div>
 
       {/* STATS CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
         <Card>
           <CardHeader>
-            <CardTitle>Total Loan Given</CardTitle>
+            <CardTitle>Total Loan Amount Given</CardTitle>
           </CardHeader>
           <CardContent className="text-xl font-bold">
             Rs. {totalLoanGiven.toLocaleString()}
@@ -76,33 +112,20 @@ export default function Dashboard() {
             <CardTitle>Active Customers</CardTitle>
           </CardHeader>
           <CardContent className="text-xl font-bold">
-            {activeCustomers}
+            {loading ? "Loading..." : activeCustomers}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Profit</CardTitle>
+            <CardTitle>Profit from Loan Interest</CardTitle>
           </CardHeader>
           <CardContent className="text-xl font-bold text-blue-600">
-            Rs. {profit.toLocaleString()}
+            Rs. {profitFromLoanInterest.toLocaleString()}
           </CardContent>
         </Card>
 
       </div>
-
-      {/* AI INSIGHTS */}
-      <Card>
-        <CardHeader>
-          <CardTitle>AI Insights</CardTitle>
-        </CardHeader>
-
-        <CardContent className="space-y-2 text-sm">
-          <p>📊 Repayment trend: Stable (last 30 days)</p>
-          <p>⚠️ Risk prediction: 2 customers may delay payments</p>
-          <p>📈 Revenue trend: Increasing by 12%</p>
-        </CardContent>
-      </Card>
 
       {/* RECENT TRANSACTIONS */}
       <Card>
@@ -123,15 +146,23 @@ export default function Dashboard() {
             </TableHeader>
 
             <TableBody>
-              {recentTransactions.map((t) => (
-                <TableRow key={t.id}>
-                  <TableCell>{t.name}</TableCell>
-                  <TableCell>{t.date}</TableCell>
+              {recentTransactions.length > 0 ? recentTransactions.map((t) => (
+                <TableRow key={`${t.customerId}-${t.date}-${t.amount}`}>
+                  <TableCell>
+                    #{t.customerId} • {t.customerName}
+                  </TableCell>
+                  <TableCell>{new Date(t.date).toLocaleDateString()}</TableCell>
                   <TableCell className="text-green-600 font-medium">
                     Rs. {t.amount.toLocaleString()}
                   </TableCell>
                 </TableRow>
-              ))}
+              )) : (
+                <TableRow>
+                  <TableCell colSpan={3} className="h-24 text-center text-zinc-500">
+                    No transactions yet
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
 
           </Table>
