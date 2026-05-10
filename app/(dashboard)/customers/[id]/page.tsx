@@ -234,12 +234,16 @@ export default async function CustomerDetails({
 
               <div className="rounded-xl bg-zinc-50 p-4">
                 <p className="text-zinc-500">Interest Rate</p>
-                <p className="mt-1 text-lg font-semibold">{customer.interestRate}%</p>
+                <p className="mt-1 text-lg font-semibold">
+                  {customer.interestRate}%
+                </p>
               </div>
 
               <div className="rounded-xl bg-zinc-50 p-4">
                 <p className="text-zinc-500">Duration</p>
-                <p className="mt-1 text-lg font-semibold">{customer.duration} months</p>
+                <p className="mt-1 text-lg font-semibold">
+                  {customer.duration} months
+                </p>
               </div>
 
               <div className="rounded-xl bg-zinc-50 p-4">
@@ -278,7 +282,9 @@ export default async function CustomerDetails({
           <details open className="rounded-2xl border bg-zinc-50/70 p-4">
             <summary className="cursor-pointer list-none flex items-center justify-between font-semibold">
               <span>Ongoing Loans</span>
-              <span className="text-sm text-zinc-500">{ongoingLoans.length}</span>
+              <span className="text-sm text-zinc-500">
+                {ongoingLoans.length}
+              </span>
             </summary>
 
             <div className="mt-4 space-y-3">
@@ -293,7 +299,9 @@ export default async function CustomerDetails({
           <details className="rounded-2xl border bg-zinc-50/70 p-4">
             <summary className="cursor-pointer list-none flex items-center justify-between font-semibold">
               <span>Completed Loans</span>
-              <span className="text-sm text-zinc-500">{completedLoans.length}</span>
+              <span className="text-sm text-zinc-500">
+                {completedLoans.length}
+              </span>
             </summary>
 
             <div className="mt-4 space-y-3">
@@ -324,17 +332,24 @@ export default async function CustomerDetails({
 
               <TableBody>
                 {(customer.transactions as CustomerTransaction[]).length > 0 ? (
-                  (customer.transactions as CustomerTransaction[]).map((t, i) => (
-                    <TableRow key={i}>
-                      <TableCell>{new Date(t.date).toLocaleDateString()}</TableCell>
-                      <TableCell className="font-medium text-green-600">
-                        {formatCurrency(t.amount)}
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  (customer.transactions as CustomerTransaction[]).map(
+                    (t, i) => (
+                      <TableRow key={i}>
+                        <TableCell>
+                          {new Date(t.date).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="font-medium text-green-600">
+                          {formatCurrency(t.amount)}
+                        </TableCell>
+                      </TableRow>
+                    ),
+                  )
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={2} className="h-24 text-center text-zinc-500">
+                    <TableCell
+                      colSpan={2}
+                      className="h-24 text-center text-zinc-500"
+                    >
                       No transactions yet.
                     </TableCell>
                   </TableRow>
