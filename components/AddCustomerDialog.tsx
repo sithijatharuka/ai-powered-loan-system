@@ -75,13 +75,22 @@ export default function AddCustomerDialog({
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        toast.error(data.message || "Failed to save customer. Please try again.");
+        toast.error(
+          data.message || "Failed to save customer. Please try again.",
+        );
         return;
       }
 
       toast.success("Customer saved successfully!");
       onCustomerSaved?.();
-      setFormData({ name: "", contact: "", address: "", loanAmount: "", interestRate: "", duration: "" });
+      setFormData({
+        name: "",
+        contact: "",
+        address: "",
+        loanAmount: "",
+        interestRate: "",
+        duration: "",
+      });
     } catch {
       toast.error("Failed to save customer. Please try again.");
     } finally {

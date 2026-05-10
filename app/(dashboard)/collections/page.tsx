@@ -34,7 +34,7 @@ export default function Collections() {
 
     try {
       const response = await fetch(
-        `/api/customers${searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : ""}`
+        `/api/customers${searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : ""}`,
       );
       const data = await response.json();
 
@@ -53,9 +53,10 @@ export default function Collections() {
     void loadCustomers();
   }, []);
 
-  const filtered = customers.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.contact.includes(search)
+  const filtered = customers.filter(
+    (c) =>
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.contact.includes(search),
   );
 
   async function handlePayment(customerId: string) {
@@ -82,13 +83,9 @@ export default function Collections() {
 
   return (
     <div className="p-6 space-y-4">
-
       {/* HEADER */}
       <div className="flex items-center justify-between">
-
-        <h1 className="text-2xl font-bold">
-          Collections
-        </h1>
+        <h1 className="text-2xl font-bold">Collections</h1>
 
         <Input
           placeholder="Search customer..."
@@ -100,107 +97,83 @@ export default function Collections() {
             void loadCustomers(value);
           }}
         />
-
       </div>
 
       {/* TABLE */}
       <div className="border rounded-xl overflow-hidden bg-white">
-
         <Table>
-
           <TableHeader className="bg-zinc-50">
             <TableRow>
               <TableHead>ID</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Contact</TableHead>
               <TableHead>Balance</TableHead>
-              <TableHead className="text-right">
-                Action
-              </TableHead>
+              <TableHead className="text-right">Action</TableHead>
             </TableRow>
           </TableHeader>
 
           <TableBody>
-
             {loading ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center text-zinc-500">
+                <TableCell
+                  colSpan={5}
+                  className="h-24 text-center text-zinc-500"
+                >
                   Loading collections...
                 </TableCell>
               </TableRow>
-            ) : filtered.map((c) => (
+            ) : (
+              filtered.map((c) => (
+                <TableRow key={c.id}>
+                  <TableCell>#{c.id}</TableCell>
 
-              <TableRow key={c.id}>
+                  <TableCell className="font-medium">{c.name}</TableCell>
 
-                <TableCell>#{c.id}</TableCell>
+                  <TableCell>{c.contact}</TableCell>
 
-                <TableCell className="font-medium">
-                  {c.name}
-                </TableCell>
+                  <TableCell>
+                    <Badge variant="destructive">
+                      Rs.{" "}
+                      {(c.totalWithInterest - c.paidAmount).toLocaleString()}
+                    </Badge>
+                  </TableCell>
 
-                <TableCell>{c.contact}</TableCell>
+                  <TableCell className="text-right">
+                    {/* PAYMENT DIALOG */}
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button size="sm">Add Payment</Button>
+                      </DialogTrigger>
 
-                <TableCell>
-                  <Badge variant="destructive">
-                    Rs. {(c.totalWithInterest - c.paidAmount).toLocaleString()}
-                  </Badge>
-                </TableCell>
+                      <DialogContent className="rounded-2xl">
+                        <DialogHeader>
+                          <DialogTitle>Add Payment for {c.name}</DialogTitle>
+                        </DialogHeader>
 
-                <TableCell className="text-right">
+                        <div className="space-y-4">
+                          <Input
+                            type="number"
+                            placeholder="Enter amount"
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
+                          />
 
-                  {/* PAYMENT DIALOG */}
-                  <Dialog>
-
-                    <DialogTrigger asChild>
-                      <Button size="sm">
-                        Add Payment
-                      </Button>
-                    </DialogTrigger>
-
-                    <DialogContent className="rounded-2xl">
-
-                      <DialogHeader>
-                        <DialogTitle>
-                          Add Payment for {c.name}
-                        </DialogTitle>
-                      </DialogHeader>
-
-                      <div className="space-y-4">
-
-                        <Input
-                          type="number"
-                          placeholder="Enter amount"
-                          value={amount}
-                          onChange={(e) =>
-                            setAmount(e.target.value)
-                          }
-                        />
-
-                        <Button
-                          className="w-full"
-                          onClick={() => handlePayment(c.id)}
-                        >
-                          Save Payment
-                        </Button>
-
-                      </div>
-
-                    </DialogContent>
-
-                  </Dialog>
-
-                </TableCell>
-
-              </TableRow>
-
-            ))}
-
+                          <Button
+                            className="w-full"
+                            onClick={() => handlePayment(c.id)}
+                          >
+                            Save Payment
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
-
         </Table>
-
       </div>
-
     </div>
   );
 }

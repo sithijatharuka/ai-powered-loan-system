@@ -168,11 +168,11 @@ export default function Settings() {
 
             {/* FOOTER */}
             <div className="flex justify-end">
-                <Button
-                  onClick={handleAddOfficer}
-                  className="rounded-xl"
-                  disabled={saving}
-                >
+              <Button
+                onClick={handleAddOfficer}
+                className="rounded-xl"
+                disabled={saving}
+              >
                 {saving ? "Saving..." : "Save Officer"}
               </Button>
             </div>

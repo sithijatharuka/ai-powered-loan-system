@@ -27,7 +27,7 @@ export default function CustomersPage() {
 
     try {
       const response = await fetch(
-        `/api/customers${searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : ""}`
+        `/api/customers${searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : ""}`,
       );
       const data = await response.json();
 
@@ -46,26 +46,22 @@ export default function CustomersPage() {
     void loadCustomers();
   }, []);
 
-  const filteredCustomers = customers.filter((c) =>
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.contact.includes(search) ||
-    c.address.toLowerCase().includes(search.toLowerCase())
+  const filteredCustomers = customers.filter(
+    (c) =>
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.contact.includes(search) ||
+      c.address.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
     <div className="w-full p-6 space-y-4">
-
       {/* Header */}
       <div className="flex items-center justify-between">
-
         {/* Title */}
-        <h1 className="text-2xl font-bold">
-          Customers
-        </h1>
+        <h1 className="text-2xl font-bold">Customers</h1>
 
         {/* Right Side */}
         <div className="flex items-center gap-3">
-
           {/* Search */}
           <div className="relative w-80">
             <Search
@@ -86,16 +82,13 @@ export default function CustomersPage() {
             />
           </div>
 
-          {/* Add Customer Button */}          
+          {/* Add Customer Button */}
           <AddCustomerDialog onCustomerSaved={() => void loadCustomers()} />
-
         </div>
-
       </div>
       {/* Table */}
       <div className="rounded-xl border bg-white overflow-hidden">
         <Table>
-
           {/* Table Header */}
           <TableHeader className="bg-zinc-50">
             <TableRow>
@@ -123,13 +116,8 @@ export default function CustomersPage() {
               </TableRow>
             ) : filteredCustomers.length > 0 ? (
               filteredCustomers.map((c) => (
-                <TableRow
-                  key={c.id}
-                  className="hover:bg-zinc-50 transition"
-                >
-                  <TableCell className="font-medium">
-                    #{c.id}
-                  </TableCell>
+                <TableRow key={c.id} className="hover:bg-zinc-50 transition">
+                  <TableCell className="font-medium">#{c.id}</TableCell>
 
                   <TableCell>{c.name}</TableCell>
 
@@ -147,10 +135,7 @@ export default function CustomersPage() {
 
                   <TableCell className="text-right">
                     <Link href={`/customers/${c.id}`}>
-                      <Button
-                        size="lg"
-                        className="rounded-lg cursor-pointer"
-                      >
+                      <Button size="lg" className="rounded-lg cursor-pointer">
                         View
                       </Button>
                     </Link>
@@ -168,7 +153,6 @@ export default function CustomersPage() {
               </TableRow>
             )}
           </TableBody>
-
         </Table>
       </div>
     </div>
