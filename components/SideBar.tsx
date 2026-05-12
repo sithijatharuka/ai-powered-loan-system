@@ -143,9 +143,10 @@ export default function AppSidebar() {
     void loadUserRole();
   }, []);
 
-  const visibleMenu = role === "officer"
-    ? menu.filter((item) => item.href === "/collections")
-    : menu;
+  const visibleMenu =
+    role === "officer"
+      ? menu.filter((item) => item.href === "/collections")
+      : menu;
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
