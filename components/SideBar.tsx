@@ -84,6 +84,7 @@
 
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -120,6 +121,31 @@ const menu = [
 
 export default function AppSidebar() {
   const pathname = usePathname();
+  const [role, setRole] = useState<"admin" | "officer" | null>(null);
+
+  useEffect(() => {
+    async function loadUserRole() {
+      try {
+        const response = await fetch("/api/auth/me");
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          setRole(null);
+          return;
+        }
+
+        setRole(data.user?.role ?? null);
+      } catch {
+        setRole(null);
+      }
+    }
+
+    void loadUserRole();
+  }, []);
+
+  const visibleMenu = role === "officer"
+    ? menu.filter((item) => item.href === "/collections")
+    : menu;
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -139,7 +165,7 @@ export default function AppSidebar() {
 
           <SidebarGroupContent>
             <SidebarMenu className="flex flex-col gap-4">
-              {menu.map((item) => (
+              {visibleMenu.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton asChild isActive={pathname === item.href}>
                     <Link href={item.href} className="flex items-center gap-2">
