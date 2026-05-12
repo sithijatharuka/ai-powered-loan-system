@@ -9,7 +9,7 @@ import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Loan App Qubitz | Digital",
+  title: "Loan App | Qubitz Digital",
   description: "Loan management system",
 };
 
