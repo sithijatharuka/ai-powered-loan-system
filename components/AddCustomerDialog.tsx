@@ -31,6 +31,7 @@ export default function AddCustomerDialog({
   });
 
   const [saving, setSaving] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setFormData({
@@ -91,6 +92,7 @@ export default function AddCustomerDialog({
         interestRate: "",
         duration: "",
       });
+      setDialogOpen(false);
     } catch {
       toast.error("Failed to save customer. Please try again.");
     } finally {
@@ -99,7 +101,22 @@ export default function AddCustomerDialog({
   }
 
   return (
-    <Dialog>
+    <Dialog
+      open={dialogOpen}
+      onOpenChange={(open) => {
+        setDialogOpen(open);
+        if (!open) {
+          setFormData({
+            name: "",
+            contact: "",
+            address: "",
+            loanAmount: "",
+            interestRate: "",
+            duration: "",
+          });
+        }
+      }}
+    >
       {/* Open Button */}
       <DialogTrigger asChild>
         <Button type="button" className="rounded-xl cursor-pointer">
