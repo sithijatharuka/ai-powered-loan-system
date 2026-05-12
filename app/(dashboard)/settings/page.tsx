@@ -8,8 +8,6 @@ import { Input } from "@/components/ui/input";
 
 import { Label } from "@/components/ui/label";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
 import {
   Dialog,
   DialogContent,
@@ -125,7 +123,7 @@ export default function Settings() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-4">
       {/* HEADER */}
       <div className="flex items-center justify-between">
         <div>
@@ -203,65 +201,55 @@ export default function Settings() {
       </div>
 
       {/* OFFICERS TABLE */}
-      <Card className="rounded-2xl">
-        <CardHeader>
-          <CardTitle>Collection Officers</CardTitle>
-        </CardHeader>
+      <div className="border rounded-xl overflow-hidden bg-white">
+        <Table>
+          {/* HEADER */}
+          <TableHeader>
+            <TableRow>
+              <TableHead>ID</TableHead>
 
-        <CardContent>
-          <div className="border rounded-xl overflow-hidden">
-            <Table>
-              {/* HEADER */}
-              <TableHeader className="bg-zinc-50">
-                <TableRow>
-                  <TableHead>ID</TableHead>
+              <TableHead>Name</TableHead>
 
-                  <TableHead>Name</TableHead>
+              <TableHead>Role</TableHead>
+            </TableRow>
+          </TableHeader>
 
-                  <TableHead>Role</TableHead>
+          {/* BODY */}
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={3}
+                  className="h-24 text-center text-zinc-500"
+                >
+                  Loading officers...
+                </TableCell>
+              </TableRow>
+            ) : officers.length > 0 ? (
+              officers.map((officer) => (
+                <TableRow key={officer.id}>
+                  <TableCell className="font-medium">
+                    #{officer.id.slice(-6)}
+                  </TableCell>
+
+                  <TableCell>{officer.username}</TableCell>
+
+                  <TableCell className="capitalize">{officer.role}</TableCell>
                 </TableRow>
-              </TableHeader>
-
-              {/* BODY */}
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={3}
-                      className="h-24 text-center text-zinc-500"
-                    >
-                      Loading officers...
-                    </TableCell>
-                  </TableRow>
-                ) : officers.length > 0 ? (
-                  officers.map((officer) => (
-                    <TableRow key={officer.id}>
-                      <TableCell className="font-medium">
-                        #{officer.id.slice(-6)}
-                      </TableCell>
-
-                      <TableCell>{officer.username}</TableCell>
-
-                      <TableCell className="capitalize">
-                        {officer.role}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={3}
-                      className="h-24 text-center text-zinc-500"
-                    >
-                      No officers found
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={3}
+                  className="h-24 text-center text-zinc-500"
+                >
+                  No officers found
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
