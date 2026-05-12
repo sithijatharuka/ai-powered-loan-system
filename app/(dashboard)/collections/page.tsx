@@ -475,7 +475,9 @@ export default function Collections() {
 
                   <TableCell>
                     <Badge
-                      variant={c.status === "completed" ? "default" : "destructive"}
+                      variant={
+                        c.status === "completed" ? "default" : "destructive"
+                      }
                     >
                       {c.status === "completed" ? "Completed" : "Ongoing"}
                     </Badge>
