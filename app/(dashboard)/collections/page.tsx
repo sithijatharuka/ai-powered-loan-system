@@ -140,6 +140,15 @@ export default function Collections() {
   );
   const [dialogLoading, setDialogLoading] = useState(false);
 
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<any | null>(null);
+  const [editAmount, setEditAmount] = useState("");
+  const [editDate, setEditDate] = useState<string>(
+    new Date().toISOString().slice(0, 10),
+  );
+  const [editTransactionIndex, setEditTransactionIndex] = useState<number>(-1);
+  const [editLoading, setEditLoading] = useState(false);
+
   async function searchCustomerById() {
     const customerId = Number(dialogSearchId.trim());
     if (!Number.isInteger(customerId) || customerId <= 0) {
@@ -190,6 +199,63 @@ export default function Collections() {
       setDialogSearchId("");
       void loadCustomers();
       // close handled by Dialog uncontrolled trigger; user can close manually
+    }
+  }
+
+  function openEditDialog(customer: any) {
+    const transactions = Array.isArray(customer.transactions)
+      ? customer.transactions
+      : [];
+
+    if (transactions.length === 0) {
+      return;
+    }
+
+    const latestIndex = transactions.length - 1;
+    const latestTransaction = transactions[latestIndex];
+
+    setEditingCustomer(customer);
+    setEditTransactionIndex(latestIndex);
+    setEditAmount(String(latestTransaction.amount ?? ""));
+    setEditDate(
+      latestTransaction.date
+        ? new Date(latestTransaction.date).toISOString().slice(0, 10)
+        : new Date().toISOString().slice(0, 10),
+    );
+    setEditDialogOpen(true);
+  }
+
+  async function submitEditPayment() {
+    if (!editingCustomer) return;
+
+    const paymentAmount = Number(editAmount);
+    if (!Number.isFinite(paymentAmount) || paymentAmount <= 0) return;
+
+    setEditLoading(true);
+    try {
+      const response = await fetch(
+        `/api/customers/${editingCustomer.id}/payments`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: paymentAmount,
+            date: new Date(editDate).toISOString(),
+            transactionIndex: editTransactionIndex,
+          }),
+        },
+      );
+
+      if (response.ok) {
+        setEditDialogOpen(false);
+        setEditingCustomer(null);
+        setEditAmount("");
+        setEditDate(new Date().toISOString().slice(0, 10));
+        setEditTransactionIndex(-1);
+        void loadCustomers();
+      }
+    } finally {
+      setEditLoading(false);
     }
   }
 
@@ -307,6 +373,62 @@ export default function Collections() {
         </div>
       </div>
 
+      <Dialog
+        open={editDialogOpen}
+        onOpenChange={(open) => {
+          setEditDialogOpen(open);
+          if (!open) {
+            setEditingCustomer(null);
+            setEditAmount("");
+            setEditDate(new Date().toISOString().slice(0, 10));
+            setEditTransactionIndex(-1);
+          }
+        }}
+      >
+        <DialogContent className="rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Payment</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="rounded-md border p-3">
+              <div className="font-medium">
+                {editingCustomer ? editingCustomer.name : "Customer"}
+              </div>
+              <div className="text-sm text-zinc-600">
+                Customer ID: #{editingCustomer?.id ?? "-"}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm">Date</label>
+              <Input
+                type="date"
+                value={editDate}
+                onChange={(e) => setEditDate(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Input
+                type="number"
+                placeholder="Enter corrected amount"
+                value={editAmount}
+                onChange={(e) => setEditAmount(e.target.value)}
+              />
+            </div>
+
+            <Button
+              className="w-full"
+              onClick={submitEditPayment}
+              disabled={editLoading}
+            >
+              {editLoading ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* TABLE */}
       <div className="border rounded-xl overflow-hidden bg-white">
         <Table>
@@ -347,8 +469,14 @@ export default function Collections() {
                   </TableCell> */}
 
                   <TableCell className="text-right">
-                    {/* Removed per-row Add Payment button — use header button */}
-                    <span className="text-zinc-500">—</span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => openEditDialog(c)}
+                      disabled={!Array.isArray(c.transactions) || c.transactions.length === 0}
+                    >
+                      Edit
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
