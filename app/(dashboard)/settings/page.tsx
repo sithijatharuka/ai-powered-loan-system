@@ -39,6 +39,7 @@ export default function Settings() {
   const [officers, setOfficers] = useState<Officer[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [addOfficerDialogOpen, setAddOfficerDialogOpen] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -114,6 +115,7 @@ export default function Settings() {
         password: "",
       });
 
+      setAddOfficerDialogOpen(false);
       toast.success("Officer added successfully");
     } catch {
       toast.error("Failed to save officer");
@@ -135,7 +137,21 @@ export default function Settings() {
         </div>
 
         {/* ADD OFFICER DIALOG */}
-        <Dialog>
+        <Dialog
+          open={addOfficerDialogOpen}
+          onOpenChange={(open) => {
+            setAddOfficerDialogOpen(open);
+            if (!open) {
+              setFormData({
+                name: "",
+                email: "",
+                phone: "",
+                area: "",
+                password: "",
+              });
+            }
+          }}
+        >
           <DialogTrigger asChild>
             <Button className="rounded-xl">Add Collection Officer</Button>
           </DialogTrigger>
