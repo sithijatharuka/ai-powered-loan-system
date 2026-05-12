@@ -89,6 +89,11 @@ export default async function CustomerDetails({
         )
       : 0;
 
+  // Calculate loan dates
+  const loanStartDate = new Date(customer.createdAt);
+  const loanFinishDate = new Date(loanStartDate);
+  loanFinishDate.setMonth(loanFinishDate.getMonth() + customer.duration);
+
   const completedLoans = [
     ...((customer.loanHistory as LoanRecord[] | undefined) ?? []),
     ...(currentLoan.status === "completed" ? [currentLoan] : []),
@@ -277,6 +282,27 @@ export default async function CustomerDetails({
                 <p className="text-sm text-zinc-500">Remaining</p>
                 <p className="mt-1 text-xl font-semibold text-red-600">
                   {formatCurrency(remaining)}
+                </p>
+              </div>
+
+              <div className="rounded-xl border p-4">
+                <p className="text-sm text-zinc-500">Daily Payment</p>
+                <p className="mt-1 text-xl font-semibold">
+                  {formatCurrency(customer.dailyPayment)}
+                </p>
+              </div>
+
+              <div className="rounded-xl border p-4">
+                <p className="text-sm text-zinc-500">Loan Start Date</p>
+                <p className="mt-1 text-xl font-semibold">
+                  {loanStartDate.toLocaleDateString()}
+                </p>
+              </div>
+
+              <div className="rounded-xl border p-4">
+                <p className="text-sm text-zinc-500">Loan Finish Date</p>
+                <p className="mt-1 text-xl font-semibold">
+                  {loanFinishDate.toLocaleDateString()}
                 </p>
               </div>
             </div>

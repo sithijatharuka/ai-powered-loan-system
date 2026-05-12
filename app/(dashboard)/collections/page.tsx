@@ -56,6 +56,26 @@ export default function Collections() {
     void loadCustomers();
   }, []);
 
+  function toLocalDateKey(value: string | Date | number | null | undefined) {
+    if (!value) {
+      return "";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+
+    return (
+      date.getFullYear() +
+      "-" +
+      String(date.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(date.getDate()).padStart(2, "0")
+    );
+  }
+
   const filtered = customers.filter((c) => {
     const matchesSearch =
       String(c.id).includes(search) ||
@@ -70,12 +90,15 @@ export default function Collections() {
       return true;
     }
 
-    const createdAt = new Date(c.createdAt);
-    if (Number.isNaN(createdAt.getTime())) {
+    const transactionDateKeys = Array.isArray(c.transactions)
+      ? c.transactions
+          .map((t: any) => toLocalDateKey(t?.date))
+          .filter((dateKey: string) => dateKey !== "")
+      : [];
+
+    if (transactionDateKeys.length === 0) {
       return false;
     }
-
-    const createdAtDateOnly = createdAt.toISOString().slice(0, 10);
 
     if (dateFilter === "today") {
       const now = new Date();
@@ -85,7 +108,8 @@ export default function Collections() {
         String(now.getMonth() + 1).padStart(2, "0") +
         "-" +
         String(now.getDate()).padStart(2, "0");
-      return createdAtDateOnly === today;
+
+      return transactionDateKeys.some((dateKey: string) => dateKey === today);
     }
 
     if (dateFilter === "last7days") {
@@ -104,19 +128,29 @@ export default function Collections() {
         String(sevenDaysAgo.getMonth() + 1).padStart(2, "0") +
         "-" +
         String(sevenDaysAgo.getDate()).padStart(2, "0");
-      return createdAtDateOnly >= sevenDaysAgoDateOnly;
+
+      return transactionDateKeys.some(
+        (dateKey: string) =>
+          dateKey >= sevenDaysAgoDateOnly && dateKey <= today,
+      );
     }
 
     if (dateFilter === "custom") {
-      if (customStartDate && createdAtDateOnly < customStartDate) {
+      if (customStartDate === "" && customEndDate === "") {
         return false;
       }
 
-      if (customEndDate && createdAtDateOnly > customEndDate) {
-        return false;
-      }
+      return transactionDateKeys.some((dateKey: string) => {
+        if (customStartDate && dateKey < customStartDate) {
+          return false;
+        }
 
-      return customStartDate !== "" || customEndDate !== "";
+        if (customEndDate && dateKey > customEndDate) {
+          return false;
+        }
+
+        return true;
+      });
     }
 
     return true;
@@ -151,6 +185,8 @@ export default function Collections() {
     new Date().toISOString().slice(0, 10),
   );
   const [dialogLoading, setDialogLoading] = useState(false);
+  const [addPaymentDialogOpen, setAddPaymentDialogOpen] = useState(false);
+  const [dialogSubmitLoading, setDialogSubmitLoading] = useState(false);
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any | null>(null);
@@ -193,24 +229,30 @@ export default function Collections() {
     const paymentAmount = Number(amount);
     if (!Number.isFinite(paymentAmount) || paymentAmount <= 0) return;
 
-    const response = await fetch(
-      `/api/customers/${dialogCustomer.id}/payments`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: paymentAmount,
-          date: new Date(dialogDate).toISOString(),
-        }),
-      },
-    );
+    setDialogSubmitLoading(true);
+    try {
+      const response = await fetch(
+        `/api/customers/${dialogCustomer.id}/payments`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: paymentAmount,
+            date: new Date(dialogDate).toISOString(),
+          }),
+        },
+      );
 
-    if (response.ok) {
-      setAmount("");
-      setDialogCustomer(null);
-      setDialogSearchId("");
-      void loadCustomers();
-      // close handled by Dialog uncontrolled trigger; user can close manually
+      if (response.ok) {
+        setAmount("");
+        setDialogCustomer(null);
+        setDialogSearchId("");
+        setDialogDate(new Date().toISOString().slice(0, 10));
+        setAddPaymentDialogOpen(false);
+        void loadCustomers();
+      }
+    } finally {
+      setDialogSubmitLoading(false);
     }
   }
 
@@ -324,7 +366,20 @@ export default function Collections() {
           ) : null}
 
           {/* Global Add Payment Dialog Trigger */}
-          <Dialog>
+          <Dialog
+            open={addPaymentDialogOpen}
+            onOpenChange={(open) => {
+              setAddPaymentDialogOpen(open);
+              if (!open) {
+                setDialogSearchId("");
+                setDialogCustomer(null);
+                setAmount("");
+                setDialogDate(new Date().toISOString().slice(0, 10));
+                setDialogLoading(false);
+                setDialogSubmitLoading(false);
+              }
+            }}
+          >
             <DialogTrigger asChild>
               <Button>Add Payment</Button>
             </DialogTrigger>
@@ -384,8 +439,12 @@ export default function Collections() {
                   />
                 </div>
 
-                <Button className="w-full" onClick={submitDialogPayment}>
-                  Submit Payment
+                <Button
+                  className="w-full"
+                  onClick={submitDialogPayment}
+                  disabled={dialogSubmitLoading}
+                >
+                  {dialogSubmitLoading ? "Submitting..." : "Submit Payment"}
                 </Button>
               </div>
             </DialogContent>
@@ -460,7 +519,9 @@ export default function Collections() {
             <TableRow>
               <TableHead>ID</TableHead>
               <TableHead>Name</TableHead>
-              <TableHead>Contact</TableHead>
+              <TableHead>Today's payment amount</TableHead>
+              <TableHead>Collected amount</TableHead>
+              <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Action</TableHead>
             </TableRow>
@@ -470,46 +531,87 @@ export default function Collections() {
             {loading ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={7}
                   className="h-24 text-center text-zinc-500"
                 >
                   Loading collections...
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((c) => (
-                <TableRow key={c.id}>
-                  <TableCell>#{c.id}</TableCell>
+              filtered
+                .sort((a, b) => a.id - b.id)
+                .map((c) => {
+                  const today = new Date();
+                  const todayDateString =
+                    today.getFullYear() +
+                    "-" +
+                    String(today.getMonth() + 1).padStart(2, "0") +
+                    "-" +
+                    String(today.getDate()).padStart(2, "0");
 
-                  <TableCell className="font-medium">{c.name}</TableCell>
+                  const todayTransactions = Array.isArray(c.transactions)
+                    ? c.transactions.filter((t: any) => {
+                        const transactionDate = toLocalDateKey(t.date);
+                        return transactionDate === todayDateString;
+                      })
+                    : [];
 
-                  <TableCell>{c.contact}</TableCell>
+                  const todayPaymentAmount = todayTransactions.reduce(
+                    (sum: number, t: any) => sum + Number(t.amount || 0),
+                    0,
+                  );
 
-                  <TableCell>
-                    <Badge
-                      variant={
-                        c.status === "completed" ? "default" : "destructive"
-                      }
-                    >
-                      {c.status === "completed" ? "Completed" : "Ongoing"}
-                    </Badge>
-                  </TableCell>
+                  const latestTransaction =
+                    Array.isArray(c.transactions) && c.transactions.length > 0
+                      ? c.transactions[c.transactions.length - 1]
+                      : null;
 
-                  <TableCell className="text-right">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => openEditDialog(c)}
-                      disabled={
-                        !Array.isArray(c.transactions) ||
-                        c.transactions.length === 0
-                      }
-                    >
-                      Edit
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
+                  const latestDate = latestTransaction
+                    ? toLocalDateKey(latestTransaction.date)
+                    : "-";
+
+                  return (
+                    <TableRow key={c.id}>
+                      <TableCell>#{c.id}</TableCell>
+
+                      <TableCell className="font-medium">{c.name}</TableCell>
+
+                      <TableCell>
+                        Rs. {todayPaymentAmount.toLocaleString()}
+                      </TableCell>
+
+                      <TableCell>
+                        Rs. {Number(c.paidAmount || 0).toLocaleString()}
+                      </TableCell>
+
+                      <TableCell>{latestDate}</TableCell>
+
+                      <TableCell>
+                        <Badge
+                          variant={
+                            c.status === "completed" ? "default" : "destructive"
+                          }
+                        >
+                          {c.status === "completed" ? "Completed" : "Ongoing"}
+                        </Badge>
+                      </TableCell>
+
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEditDialog(c)}
+                          disabled={
+                            !Array.isArray(c.transactions) ||
+                            c.transactions.length === 0
+                          }
+                        >
+                          Edit
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
             )}
           </TableBody>
         </Table>

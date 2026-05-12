@@ -116,36 +116,38 @@ export default function CustomersPage() {
                 </TableCell>
               </TableRow>
             ) : filteredCustomers.length > 0 ? (
-              filteredCustomers.map((c, index) => (
-                <TableRow
-                  key={`${String(c.id ?? "missing")}-${String(c.mongoId ?? index)}`}
-                  className="hover:bg-zinc-50 transition"
-                >
-                  <TableCell className="font-medium">#{c.id}</TableCell>
+              filteredCustomers
+                .sort((a, b) => a.id - b.id)
+                .map((c, index) => (
+                  <TableRow
+                    key={`${String(c.id ?? "missing")}-${String(c.mongoId ?? index)}`}
+                    className="hover:bg-zinc-50 transition"
+                  >
+                    <TableCell className="font-medium">#{c.id}</TableCell>
 
-                  <TableCell>{c.name}</TableCell>
+                    <TableCell>{c.name}</TableCell>
 
-                  <TableCell>{c.contact}</TableCell>
+                    <TableCell>{c.contact}</TableCell>
 
-                  <TableCell>{c.address}</TableCell>
+                    <TableCell>{c.address}</TableCell>
 
-                  <TableCell>
-                    Rs. {Number(c.loanAmount).toLocaleString()}
-                  </TableCell>
+                    <TableCell>
+                      Rs. {Number(c.loanAmount).toLocaleString()}
+                    </TableCell>
 
-                  <TableCell>{c.interestRate}%</TableCell>
+                    <TableCell>{c.interestRate}%</TableCell>
 
-                  <TableCell>{c.duration} months</TableCell>
+                    <TableCell>{c.duration} months</TableCell>
 
-                  <TableCell className="text-right">
-                    <Link href={`/customers/${c.id}`}>
-                      <Button size="lg" className="rounded-lg cursor-pointer">
-                        View
-                      </Button>
-                    </Link>
-                  </TableCell>
-                </TableRow>
-              ))
+                    <TableCell className="text-right">
+                      <Link href={`/customers/${c.id}`}>
+                        <Button size="lg" className="rounded-lg cursor-pointer">
+                          View
+                        </Button>
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                ))
             ) : (
               <TableRow>
                 <TableCell

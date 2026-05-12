@@ -25,6 +25,19 @@ function serializeCustomer(customer: {
     dailyPayment: number;
     paidAmount: number;
     transactions: Array<{ amount: number; date: Date; note?: string }>;
+    loanHistory?: Array<{
+        loanAmount: number;
+        interestRate: number;
+        duration: number;
+        totalWithInterest: number;
+        monthlyPayment: number;
+        dailyPayment: number;
+        paidAmount: number;
+        transactions: Array<{ amount: number; date: Date; note?: string }>;
+        status?: "ongoing" | "completed";
+        openedAt?: Date;
+        closedAt?: Date;
+    }>;
     status?: "ongoing" | "completed";
     createdAt?: Date;
     updatedAt?: Date;
@@ -49,6 +62,7 @@ function serializeCustomer(customer: {
         paidAmount: customer.paidAmount,
         status: customer.status ?? (remaining > 0 ? "ongoing" : "completed"),
         transactions: customer.transactions,
+        loanHistory: customer.loanHistory ?? [],
         createdAt: customer.createdAt,
         updatedAt: customer.updatedAt,
     };
