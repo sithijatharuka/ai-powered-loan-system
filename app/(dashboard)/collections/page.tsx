@@ -490,66 +490,68 @@ export default function Collections() {
                     String(today.getDate()).padStart(2, "0");
 
                   const todayTransactions = Array.isArray(c.transactions)
-                  ? c.transactions.filter((t: any) => {
-                      const transactionDate = new Date(t.date)
+                    ? c.transactions.filter((t: any) => {
+                        const transactionDate = new Date(t.date)
+                          .toISOString()
+                          .slice(0, 10);
+                        return transactionDate === todayDateString;
+                      })
+                    : [];
+
+                  const todayPaymentAmount = todayTransactions.reduce(
+                    (sum: number, t: any) => sum + Number(t.amount || 0),
+                    0,
+                  );
+
+                  const latestTransaction =
+                    Array.isArray(c.transactions) && c.transactions.length > 0
+                      ? c.transactions[c.transactions.length - 1]
+                      : null;
+
+                  const latestDate = latestTransaction
+                    ? new Date(latestTransaction.date)
                         .toISOString()
-                        .slice(0, 10);
-                      return transactionDate === todayDateString;
-                    })
-                  : [];
+                        .slice(0, 10)
+                    : "-";
 
-                const todayPaymentAmount = todayTransactions.reduce(
-                  (sum: number, t: any) => sum + Number(t.amount || 0),
-                  0,
-                );
+                  return (
+                    <TableRow key={c.id}>
+                      <TableCell>#{c.id}</TableCell>
 
-                const latestTransaction =
-                  Array.isArray(c.transactions) && c.transactions.length > 0
-                    ? c.transactions[c.transactions.length - 1]
-                    : null;
+                      <TableCell className="font-medium">{c.name}</TableCell>
 
-                const latestDate = latestTransaction
-                  ? new Date(latestTransaction.date).toISOString().slice(0, 10)
-                  : "-";
+                      <TableCell>
+                        Rs. {todayPaymentAmount.toLocaleString()}
+                      </TableCell>
 
-                return (
-                  <TableRow key={c.id}>
-                    <TableCell>#{c.id}</TableCell>
+                      <TableCell>{latestDate}</TableCell>
 
-                    <TableCell className="font-medium">{c.name}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={
+                            c.status === "completed" ? "default" : "destructive"
+                          }
+                        >
+                          {c.status === "completed" ? "Completed" : "Ongoing"}
+                        </Badge>
+                      </TableCell>
 
-                    <TableCell>
-                      Rs. {todayPaymentAmount.toLocaleString()}
-                    </TableCell>
-
-                    <TableCell>{latestDate}</TableCell>
-
-                    <TableCell>
-                      <Badge
-                        variant={
-                          c.status === "completed" ? "default" : "destructive"
-                        }
-                      >
-                        {c.status === "completed" ? "Completed" : "Ongoing"}
-                      </Badge>
-                    </TableCell>
-
-                    <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => openEditDialog(c)}
-                        disabled={
-                          !Array.isArray(c.transactions) ||
-                          c.transactions.length === 0
-                        }
-                      >
-                        Edit
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => openEditDialog(c)}
+                          disabled={
+                            !Array.isArray(c.transactions) ||
+                            c.transactions.length === 0
+                          }
+                        >
+                          Edit
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
             )}
           </TableBody>
         </Table>

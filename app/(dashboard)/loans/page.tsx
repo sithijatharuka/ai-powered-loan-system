@@ -30,6 +30,9 @@ export default function Loans() {
   const [loans, setLoans] = useState<LoanRow[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Helper function to format loan ID as L01, L02, etc.
+  const formatLoanId = (id: number): string => `L${String(id).padStart(2, "0")}`;
+
   useEffect(() => {
     async function loadLoans() {
       setLoading(true);
@@ -75,9 +78,11 @@ export default function Loans() {
               {/* TABLE HEADER */}
               <TableHeader className="bg-zinc-50">
                 <TableRow>
-                  <TableHead>Customer</TableHead>
+                  <TableHead>Loan ID</TableHead>
 
-                  <TableHead>ID</TableHead>
+                  <TableHead>Customer Name</TableHead>
+
+                  <TableHead>Customer ID</TableHead>
 
                   <TableHead>Loan Amount</TableHead>
 
@@ -98,7 +103,7 @@ export default function Loans() {
                 {loading ? (
                   <TableRow>
                     <TableCell
-                      colSpan={9}
+                      colSpan={10}
                       className="h-24 text-center text-zinc-500"
                     >
                       Loading loans...
@@ -108,49 +113,50 @@ export default function Loans() {
                   loans
                     .sort((a, b) => a.id - b.id)
                     .map((loan) => {
-                    const totalPayable = loan.totalWithInterest;
+                      const totalPayable = loan.totalWithInterest;
 
-                    const remaining = totalPayable - loan.paidAmount;
+                      const remaining = totalPayable - loan.paidAmount;
 
-                    const completed = remaining <= 0;
+                      const completed = remaining <= 0;
 
-                    return (
-                      <TableRow key={loan.id}>
-                        <TableCell>{loan.name}</TableCell>
-                        <TableCell className="font-medium">
-                          #{loan.id}
-                        </TableCell>
+                      return (
+                        <TableRow key={loan.id}>
+                          <TableCell className="font-medium">
+                            {formatLoanId(loan.id)}
+                          </TableCell>
+                          <TableCell>{loan.name}</TableCell>
+                          <TableCell>#{loan.id}</TableCell>
 
-                        <TableCell>
-                          Rs. {loan.loanAmount.toLocaleString()}
-                        </TableCell>
+                          <TableCell>
+                            Rs. {loan.loanAmount.toLocaleString()}
+                          </TableCell>
 
-                        <TableCell>{loan.interestRate}%</TableCell>
+                          <TableCell>{loan.interestRate}%</TableCell>
 
-                        <TableCell>{loan.duration} Months</TableCell>
+                          <TableCell>{loan.duration} Months</TableCell>
 
-                        <TableCell className="font-medium text-blue-600">
-                          Rs. {totalPayable.toLocaleString()}
-                        </TableCell>
+                          <TableCell className="font-medium text-blue-600">
+                            Rs. {totalPayable.toLocaleString()}
+                          </TableCell>
 
-                        <TableCell className="text-red-600 font-medium">
-                          Rs. {remaining.toLocaleString()}
-                        </TableCell>
+                          <TableCell className="text-red-600 font-medium">
+                            Rs. {remaining.toLocaleString()}
+                          </TableCell>
 
-                        <TableCell>
-                          {completed ? (
-                            <Badge className="bg-green-500">Completed</Badge>
-                          ) : (
-                            <Badge variant="destructive">Active</Badge>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
+                          <TableCell>
+                            {completed ? (
+                              <Badge className="bg-green-500">Completed</Badge>
+                            ) : (
+                              <Badge variant="destructive">Active</Badge>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
                 ) : (
                   <TableRow>
                     <TableCell
-                      colSpan={9}
+                      colSpan={10}
                       className="h-24 text-center text-zinc-500"
                     >
                       No loans found
