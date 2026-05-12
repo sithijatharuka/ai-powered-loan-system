@@ -151,6 +151,8 @@ export default function Collections() {
     new Date().toISOString().slice(0, 10),
   );
   const [dialogLoading, setDialogLoading] = useState(false);
+  const [addPaymentDialogOpen, setAddPaymentDialogOpen] = useState(false);
+  const [dialogSubmitLoading, setDialogSubmitLoading] = useState(false);
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<any | null>(null);
@@ -193,24 +195,30 @@ export default function Collections() {
     const paymentAmount = Number(amount);
     if (!Number.isFinite(paymentAmount) || paymentAmount <= 0) return;
 
-    const response = await fetch(
-      `/api/customers/${dialogCustomer.id}/payments`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: paymentAmount,
-          date: new Date(dialogDate).toISOString(),
-        }),
-      },
-    );
+    setDialogSubmitLoading(true);
+    try {
+      const response = await fetch(
+        `/api/customers/${dialogCustomer.id}/payments`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: paymentAmount,
+            date: new Date(dialogDate).toISOString(),
+          }),
+        },
+      );
 
-    if (response.ok) {
-      setAmount("");
-      setDialogCustomer(null);
-      setDialogSearchId("");
-      void loadCustomers();
-      // close handled by Dialog uncontrolled trigger; user can close manually
+      if (response.ok) {
+        setAmount("");
+        setDialogCustomer(null);
+        setDialogSearchId("");
+        setDialogDate(new Date().toISOString().slice(0, 10));
+        setAddPaymentDialogOpen(false);
+        void loadCustomers();
+      }
+    } finally {
+      setDialogSubmitLoading(false);
     }
   }
 
@@ -324,7 +332,20 @@ export default function Collections() {
           ) : null}
 
           {/* Global Add Payment Dialog Trigger */}
-          <Dialog>
+          <Dialog
+            open={addPaymentDialogOpen}
+            onOpenChange={(open) => {
+              setAddPaymentDialogOpen(open);
+              if (!open) {
+                setDialogSearchId("");
+                setDialogCustomer(null);
+                setAmount("");
+                setDialogDate(new Date().toISOString().slice(0, 10));
+                setDialogLoading(false);
+                setDialogSubmitLoading(false);
+              }
+            }}
+          >
             <DialogTrigger asChild>
               <Button>Add Payment</Button>
             </DialogTrigger>
@@ -384,8 +405,12 @@ export default function Collections() {
                   />
                 </div>
 
-                <Button className="w-full" onClick={submitDialogPayment}>
-                  Submit Payment
+                <Button
+                  className="w-full"
+                  onClick={submitDialogPayment}
+                  disabled={dialogSubmitLoading}
+                >
+                  {dialogSubmitLoading ? "Submitting..." : "Submit Payment"}
                 </Button>
               </div>
             </DialogContent>
