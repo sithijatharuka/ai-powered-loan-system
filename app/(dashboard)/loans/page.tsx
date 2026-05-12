@@ -46,12 +46,16 @@ type CustomerLoan = {
 };
 
 export default function Loans() {
-  const [loans, setLoans] = useState<Array<CustomerLoan & {
-    loanId: string;
-    openedAt?: string | Date;
-    closedAt?: string | Date;
-    status: "ongoing" | "completed";
-  }>>([]);
+  const [loans, setLoans] = useState<
+    Array<
+      CustomerLoan & {
+        loanId: string;
+        openedAt?: string | Date;
+        closedAt?: string | Date;
+        status: "ongoing" | "completed";
+      }
+    >
+  >([]);
   const [loading, setLoading] = useState(true);
 
   // Helper function to format loan ID as L01, L02, etc.
@@ -91,7 +95,8 @@ export default function Loans() {
             const historyLoans = (customer.loanHistory ?? []).map(
               (loan, recordIndex) => {
                 const historyRemaining = Math.max(
-                  Number(loan.totalWithInterest || 0) - Number(loan.paidAmount || 0),
+                  Number(loan.totalWithInterest || 0) -
+                    Number(loan.paidAmount || 0),
                   0,
                 );
 
@@ -104,7 +109,8 @@ export default function Loans() {
                   paidAmount: loan.paidAmount,
                   loanId: formatLoanId(customer.id, recordIndex + 1),
                   status:
-                    loan.status ?? (historyRemaining > 0 ? "ongoing" : "completed"),
+                    loan.status ??
+                    (historyRemaining > 0 ? "ongoing" : "completed"),
                   openedAt: loan.openedAt,
                   closedAt: loan.closedAt,
                 };
@@ -195,7 +201,8 @@ export default function Loans() {
 
                       const remaining = totalPayable - loan.paidAmount;
 
-                      const completed = loan.status === "completed" || remaining <= 0;
+                      const completed =
+                        loan.status === "completed" || remaining <= 0;
 
                       return (
                         <TableRow key={loan.loanId}>
