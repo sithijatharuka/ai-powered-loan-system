@@ -28,6 +28,9 @@ export default function Collections() {
   const [amount, setAmount] = useState("");
   const [customers, setCustomers] = useState<Array<any>>([]);
   const [loading, setLoading] = useState(true);
+  const [dateFilter, setDateFilter] = useState("all");
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
 
   async function loadCustomers(searchTerm = search) {
     setLoading(true);
@@ -53,12 +56,55 @@ export default function Collections() {
     void loadCustomers();
   }, []);
 
-  const filtered = customers.filter(
-    (c) =>
+  const filtered = customers.filter((c) => {
+    const matchesSearch =
       String(c.id).includes(search) ||
       c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.contact.includes(search),
-  );
+      c.contact.includes(search);
+
+    if (!matchesSearch) {
+      return false;
+    }
+
+    if (dateFilter === "all") {
+      return true;
+    }
+
+    const createdAt = new Date(c.createdAt);
+    if (Number.isNaN(createdAt.getTime())) {
+      return false;
+    }
+
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+
+    if (dateFilter === "today") {
+      return createdAt >= startOfToday;
+    }
+
+    if (dateFilter === "last7days") {
+      const startOfSevenDaysAgo = new Date(startOfToday);
+      startOfSevenDaysAgo.setDate(startOfSevenDaysAgo.getDate() - 6);
+      return createdAt >= startOfSevenDaysAgo;
+    }
+
+    if (dateFilter === "custom") {
+      const start = customStartDate ? new Date(`${customStartDate}T00:00:00`) : null;
+      const end = customEndDate ? new Date(`${customEndDate}T23:59:59.999`) : null;
+
+      if (start && createdAt < start) {
+        return false;
+      }
+
+      if (end && createdAt > end) {
+        return false;
+      }
+
+      return true;
+    }
+
+    return true;
+  });
 
   async function handlePayment(customerId: string) {
     const paymentAmount = Number(amount);
@@ -146,13 +192,13 @@ export default function Collections() {
   return (
     <div className="p-6 space-y-4">
       {/* HEADER */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <h1 className="text-2xl font-bold">Collections</h1>
 
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
           <Input
             placeholder="Search by ID or customer..."
-            className="w-80"
+            className="w-full lg:w-80"
             value={search}
             onChange={(e) => {
               const value = e.target.value;
@@ -160,6 +206,32 @@ export default function Collections() {
               void loadCustomers(value);
             }}
           />
+
+          <select
+            className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+          >
+            <option value="all">All</option>
+            <option value="today">Today</option>
+            <option value="last7days">Last 7 days</option>
+            <option value="custom">Custom date range</option>
+          </select>
+
+          {dateFilter === "custom" ? (
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Input
+                type="date"
+                value={customStartDate}
+                onChange={(e) => setCustomStartDate(e.target.value)}
+              />
+              <Input
+                type="date"
+                value={customEndDate}
+                onChange={(e) => setCustomEndDate(e.target.value)}
+              />
+            </div>
+          ) : null}
 
           {/* Global Add Payment Dialog Trigger */}
           <Dialog>
@@ -186,21 +258,17 @@ export default function Collections() {
                 </div>
 
                 {dialogCustomer ? (
-                  <div className="p-2 border rounded">
+                  <div className="rounded-md border p-2">
                     <div className="font-medium">{dialogCustomer.name}</div>
                     <div className="text-sm text-zinc-600">
-                      Available balance: Rs.{" "}
-                      {(
-                        dialogCustomer.totalWithInterest -
-                        dialogCustomer.paidAmount
+                      Available balance: Rs. {(
+                        dialogCustomer.totalWithInterest - dialogCustomer.paidAmount
                       ).toLocaleString()}
                     </div>
                   </div>
                 ) : (
                   dialogSearchId && (
-                    <div className="text-sm text-zinc-500">
-                      No customer found
-                    </div>
+                    <div className="text-sm text-zinc-500">No customer found</div>
                   )
                 )}
 
