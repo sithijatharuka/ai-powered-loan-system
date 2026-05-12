@@ -550,7 +550,9 @@ export default function Collections() {
                         Rs. {todayPaymentAmount.toLocaleString()}
                       </TableCell>
 
-                      <TableCell>Rs. {Number(c.paidAmount || 0).toLocaleString()}</TableCell>
+                      <TableCell>
+                        Rs. {Number(c.paidAmount || 0).toLocaleString()}
+                      </TableCell>
 
                       <TableCell>{latestDate}</TableCell>
 
