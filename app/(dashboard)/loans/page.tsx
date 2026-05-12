@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 
 import {
   Table,
@@ -13,8 +12,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type LoanHistoryRow = {
   loanAmount: number;
@@ -131,128 +128,121 @@ export default function Loans() {
   }, []);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="w-full p-6 space-y-4">
       {/* HEADER */}
       <div>
-        <h1 className="text-3xl font-bold">Loans</h1>
+        <h1 className="text-2xl font-bold">Loans</h1>
 
         <p className="text-sm text-muted-foreground">
           Individual customer loan details
         </p>
       </div>
 
-      {/* TABLE CARD */}
-      <Card className="rounded-2xl">
-        <CardHeader>
-          <CardTitle>Loan Records</CardTitle>
-        </CardHeader>
+      <div className="rounded-xl border bg-white overflow-hidden">
+        <Table>
+          {/* TABLE HEADER */}
+          <TableHeader>
+            <TableRow>
+              <TableHead>Loan ID</TableHead>
 
-        <CardContent>
-          <div className="border rounded-xl overflow-hidden">
-            <Table>
-              {/* TABLE HEADER */}
-              <TableHeader className="bg-zinc-50">
-                <TableRow>
-                  <TableHead>Loan ID</TableHead>
+              <TableHead>Customer Name</TableHead>
 
-                  <TableHead>Customer Name</TableHead>
+              <TableHead>Customer ID</TableHead>
 
-                  <TableHead>Customer ID</TableHead>
+              <TableHead>Loan Amount</TableHead>
 
-                  <TableHead>Loan Amount</TableHead>
+              <TableHead>Interest</TableHead>
 
-                  <TableHead>Interest</TableHead>
+              <TableHead>Duration</TableHead>
 
-                  <TableHead>Duration</TableHead>
+              <TableHead>Total Payable</TableHead>
 
-                  <TableHead>Total Payable</TableHead>
+              <TableHead>Remaining</TableHead>
 
-                  <TableHead>Remaining</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
 
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
+          {/* TABLE BODY */}
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={10}
+                  className="h-24 text-center text-zinc-500"
+                >
+                  Loading loans...
+                </TableCell>
+              </TableRow>
+            ) : loans.length > 0 ? (
+              loans
+                .sort((a, b) => {
+                  const aTime = new Date(a.openedAt ?? 0).getTime();
+                  const bTime = new Date(b.openedAt ?? 0).getTime();
 
-              {/* TABLE BODY */}
-              <TableBody>
-                {loading ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={10}
-                      className="h-24 text-center text-zinc-500"
-                    >
-                      Loading loans...
-                    </TableCell>
-                  </TableRow>
-                ) : loans.length > 0 ? (
-                  loans
-                    .sort((a, b) => {
-                      const aTime = new Date(a.openedAt ?? 0).getTime();
-                      const bTime = new Date(b.openedAt ?? 0).getTime();
+                  if (aTime !== bTime) {
+                    return bTime - aTime;
+                  }
 
-                      if (aTime !== bTime) {
-                        return bTime - aTime;
-                      }
+                  return a.id - b.id;
+                })
+                .map((loan) => {
+                  const totalPayable = loan.totalWithInterest;
 
-                      return a.id - b.id;
-                    })
-                    .map((loan) => {
-                      const totalPayable = loan.totalWithInterest;
+                  const remaining = totalPayable - loan.paidAmount;
 
-                      const remaining = totalPayable - loan.paidAmount;
+                  const completed =
+                    loan.status === "completed" || remaining <= 0;
 
-                      const completed =
-                        loan.status === "completed" || remaining <= 0;
+                  return (
+                    <TableRow key={loan.loanId}>
+                      <TableCell className="font-medium">
+                        {loan.loanId}
+                      </TableCell>
+                      <TableCell>{loan.name}</TableCell>
+                      <TableCell>#{loan.id}</TableCell>
 
-                      return (
-                        <TableRow key={loan.loanId}>
-                          <TableCell className="font-medium">
-                            {loan.loanId}
-                          </TableCell>
-                          <TableCell>{loan.name}</TableCell>
-                          <TableCell>#{loan.id}</TableCell>
+                      <TableCell>
+                        Rs. {loan.loanAmount.toLocaleString()}
+                      </TableCell>
 
-                          <TableCell>
-                            Rs. {loan.loanAmount.toLocaleString()}
-                          </TableCell>
+                      <TableCell>{loan.interestRate}%</TableCell>
 
-                          <TableCell>{loan.interestRate}%</TableCell>
+                      <TableCell>{loan.duration} Months</TableCell>
 
-                          <TableCell>{loan.duration} Months</TableCell>
+                      <TableCell className="font-medium">
+                        Rs. {totalPayable.toLocaleString()}
+                      </TableCell>
 
-                          <TableCell className="font-medium text-blue-600">
-                            Rs. {totalPayable.toLocaleString()}
-                          </TableCell>
+                      <TableCell className="font-medium">
+                        Rs. {remaining.toLocaleString()}
+                      </TableCell>
 
-                          <TableCell className="text-red-600 font-medium">
-                            Rs. {remaining.toLocaleString()}
-                          </TableCell>
-
-                          <TableCell>
-                            {completed ? (
-                              <Badge className="bg-green-500">Completed</Badge>
-                            ) : (
-                              <Badge variant="destructive">Active</Badge>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={10}
-                      className="h-24 text-center text-zinc-500"
-                    >
-                      No loans found
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+                      <TableCell>
+                        {completed ? (
+                          <Badge className="bg-green-500" variant="default">
+                            Completed
+                          </Badge>
+                        ) : (
+                          <Badge variant="destructive">Active</Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={10}
+                  className="h-24 text-center text-zinc-500"
+                >
+                  No loans found
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
