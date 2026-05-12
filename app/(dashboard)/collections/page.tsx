@@ -75,36 +75,33 @@ export default function Collections() {
       return false;
     }
 
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
+    const createdAtDateOnly = createdAt.toISOString().slice(0, 10);
 
     if (dateFilter === "today") {
-      return createdAt >= startOfToday;
+      const now = new Date();
+      const today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+      return createdAtDateOnly === today;
     }
 
     if (dateFilter === "last7days") {
-      const startOfSevenDaysAgo = new Date(startOfToday);
-      startOfSevenDaysAgo.setDate(startOfSevenDaysAgo.getDate() - 6);
-      return createdAt >= startOfSevenDaysAgo;
+      const now = new Date();
+      const today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+      const sevenDaysAgo = new Date(now);
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+      const sevenDaysAgoDateOnly = sevenDaysAgo.getFullYear() + '-' + String(sevenDaysAgo.getMonth() + 1).padStart(2, '0') + '-' + String(sevenDaysAgo.getDate()).padStart(2, '0');
+      return createdAtDateOnly >= sevenDaysAgoDateOnly;
     }
 
     if (dateFilter === "custom") {
-      const start = customStartDate
-        ? new Date(`${customStartDate}T00:00:00`)
-        : null;
-      const end = customEndDate
-        ? new Date(`${customEndDate}T23:59:59.999`)
-        : null;
-
-      if (start && createdAt < start) {
+      if (customStartDate && createdAtDateOnly < customStartDate) {
         return false;
       }
 
-      if (end && createdAt > end) {
+      if (customEndDate && createdAtDateOnly > customEndDate) {
         return false;
       }
 
-      return true;
+      return customStartDate !== "" || customEndDate !== "";
     }
 
     return true;
