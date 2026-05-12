@@ -407,7 +407,8 @@ export default function Collections() {
                 Customer ID: #{editingCustomer?.id ?? "-"}
               </div>
               <div className="text-sm text-zinc-600 mt-1">
-                Current remaining balance: Rs. {editRemainingBalance.toLocaleString()}
+                Current remaining balance: Rs.{" "}
+                {editRemainingBalance.toLocaleString()}
               </div>
             </div>
 
