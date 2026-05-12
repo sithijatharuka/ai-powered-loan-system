@@ -486,6 +486,7 @@ export default function Collections() {
               <TableHead>ID</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Today's payment amount</TableHead>
+              <TableHead>Collected amount</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Action</TableHead>
@@ -496,7 +497,7 @@ export default function Collections() {
             {loading ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={7}
                   className="h-24 text-center text-zinc-500"
                 >
                   Loading collections...
@@ -548,6 +549,8 @@ export default function Collections() {
                       <TableCell>
                         Rs. {todayPaymentAmount.toLocaleString()}
                       </TableCell>
+
+                      <TableCell>Rs. {Number(c.paidAmount || 0).toLocaleString()}</TableCell>
 
                       <TableCell>{latestDate}</TableCell>
 
