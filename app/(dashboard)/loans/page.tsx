@@ -75,9 +75,9 @@ export default function Loans() {
               {/* TABLE HEADER */}
               <TableHeader className="bg-zinc-50">
                 <TableRow>
-                  <TableHead>ID</TableHead>
-
                   <TableHead>Customer</TableHead>
+
+                  <TableHead>ID</TableHead>
 
                   <TableHead>Loan Amount</TableHead>
 
@@ -90,8 +90,6 @@ export default function Loans() {
                   <TableHead>Remaining</TableHead>
 
                   <TableHead>Status</TableHead>
-
-                  <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
 
@@ -116,11 +114,10 @@ export default function Loans() {
 
                     return (
                       <TableRow key={loan.id}>
+                        <TableCell>{loan.name}</TableCell>
                         <TableCell className="font-medium">
                           #{loan.id}
                         </TableCell>
-
-                        <TableCell>{loan.name}</TableCell>
 
                         <TableCell>
                           Rs. {loan.loanAmount.toLocaleString()}
@@ -140,16 +137,10 @@ export default function Loans() {
 
                         <TableCell>
                           {completed ? (
-                            <Badge>Completed</Badge>
+                            <Badge className="bg-green-500">Completed</Badge>
                           ) : (
                             <Badge variant="destructive">Active</Badge>
                           )}
-                        </TableCell>
-
-                        <TableCell className="text-right">
-                          <Button size="sm" className="rounded-lg">
-                            View
-                          </Button>
                         </TableCell>
                       </TableRow>
                     );

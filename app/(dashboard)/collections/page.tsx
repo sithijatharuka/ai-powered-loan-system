@@ -89,8 +89,12 @@ export default function Collections() {
     }
 
     if (dateFilter === "custom") {
-      const start = customStartDate ? new Date(`${customStartDate}T00:00:00`) : null;
-      const end = customEndDate ? new Date(`${customEndDate}T23:59:59.999`) : null;
+      const start = customStartDate
+        ? new Date(`${customStartDate}T00:00:00`)
+        : null;
+      const end = customEndDate
+        ? new Date(`${customEndDate}T23:59:59.999`)
+        : null;
 
       if (start && createdAt < start) {
         return false;
@@ -261,14 +265,18 @@ export default function Collections() {
                   <div className="rounded-md border p-2">
                     <div className="font-medium">{dialogCustomer.name}</div>
                     <div className="text-sm text-zinc-600">
-                      Available balance: Rs. {(
-                        dialogCustomer.totalWithInterest - dialogCustomer.paidAmount
+                      Available balance: Rs.{" "}
+                      {(
+                        dialogCustomer.totalWithInterest -
+                        dialogCustomer.paidAmount
                       ).toLocaleString()}
                     </div>
                   </div>
                 ) : (
                   dialogSearchId && (
-                    <div className="text-sm text-zinc-500">No customer found</div>
+                    <div className="text-sm text-zinc-500">
+                      No customer found
+                    </div>
                   )
                 )}
 
