@@ -78,6 +78,17 @@ export default async function CustomerDetails({
     closedAt: isLoanComplete ? customer.updatedAt : undefined,
   };
 
+  const percentPaid =
+    totalWithInterest > 0
+      ? Math.max(
+          0,
+          Math.min(
+            100,
+            Math.round((customer.paidAmount / totalWithInterest) * 100),
+          ),
+        )
+      : 0;
+
   const completedLoans = [
     ...((customer.loanHistory as LoanRecord[] | undefined) ?? []),
     ...(currentLoan.status === "completed" ? [currentLoan] : []),
@@ -267,6 +278,21 @@ export default async function CustomerDetails({
                 <p className="mt-1 text-xl font-semibold text-red-600">
                   {formatCurrency(remaining)}
                 </p>
+              </div>
+            </div>
+
+            {/* Progress bar for current loan repayment */}
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-zinc-500">Repayment Progress</p>
+                <p className="text-sm font-medium">{percentPaid}%</p>
+              </div>
+
+              <div className="w-full bg-zinc-200 rounded-full h-3">
+                <div
+                  className="h-3 rounded-full bg-green-600"
+                  style={{ width: `${percentPaid}%` }}
+                />
               </div>
             </div>
           </CardContent>

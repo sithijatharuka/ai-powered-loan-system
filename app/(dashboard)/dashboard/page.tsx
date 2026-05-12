@@ -19,6 +19,8 @@ type DashboardSummary = {
   pendingLoan: number;
   activeCustomers: number;
   profitFromLoanInterest: number;
+  monthlyProfit?: number;
+  monthName?: string;
   recentTransactions: Array<{
     customerId: number;
     customerName: string;
@@ -59,6 +61,10 @@ export default function Dashboard() {
   const pendingLoan = summary?.pendingLoan ?? 0;
   const activeCustomers = summary?.activeCustomers ?? 0;
   const profitFromLoanInterest = summary?.profitFromLoanInterest ?? 0;
+  const monthlyProfit = summary?.monthlyProfit ?? 0;
+  const monthName =
+    summary?.monthName ??
+    new Date().toLocaleString(undefined, { month: "long", year: "numeric" });
   const recentTransactions = summary?.recentTransactions ?? [];
 
   return (
@@ -115,6 +121,15 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="text-xl font-bold text-blue-600">
             Rs. {profitFromLoanInterest.toLocaleString()}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Monthly Profit — {monthName}</CardTitle>
+          </CardHeader>
+          <CardContent className="text-xl font-bold text-indigo-600">
+            Rs. {monthlyProfit.toLocaleString()}
           </CardContent>
         </Card>
       </div>

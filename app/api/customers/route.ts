@@ -25,9 +25,15 @@ function serializeCustomer(customer: {
     dailyPayment: number;
     paidAmount: number;
     transactions: Array<{ amount: number; date: Date; note?: string }>;
+    status?: "ongoing" | "completed";
     createdAt?: Date;
     updatedAt?: Date;
 }) {
+    const remaining = Math.max(
+        Number(customer.totalWithInterest || 0) - Number(customer.paidAmount || 0),
+        0,
+    );
+
     return {
         id: customer.customerId,
         mongoId: customer._id.toString(),
@@ -41,6 +47,7 @@ function serializeCustomer(customer: {
         monthlyPayment: customer.monthlyPayment,
         dailyPayment: customer.dailyPayment,
         paidAmount: customer.paidAmount,
+        status: customer.status ?? (remaining > 0 ? "ongoing" : "completed"),
         transactions: customer.transactions,
         createdAt: customer.createdAt,
         updatedAt: customer.updatedAt,
@@ -83,20 +90,35 @@ export async function GET(request: NextRequest) {
         await connectToDb();
         await backfillCustomerIds();
 
+        const customerIdParam = request.nextUrl.searchParams.get("customerId")?.trim() ?? "";
         const search = request.nextUrl.searchParams.get("search")?.trim() ?? "";
-        const numericSearch = Number(search);
-        const hasNumericSearch = search !== "" && Number.isInteger(numericSearch);
+        const exactCustomerId = Number(customerIdParam);
+        const hasExactCustomerId = customerIdParam !== "" && Number.isInteger(exactCustomerId);
 
-        const query = search
-            ? {
-                $or: [
-                    ...(hasNumericSearch ? [{ customerId: numericSearch }] : []),
-                    { name: { $regex: search, $options: "i" } },
-                    { contact: { $regex: search, $options: "i" } },
-                    { address: { $regex: search, $options: "i" } },
-                ],
-            }
-            : {};
+        if (customerIdParam !== "" && !hasExactCustomerId) {
+            return NextResponse.json(
+                { success: false, message: "customerId must be a valid integer" },
+                { status: 400 }
+            );
+        }
+
+        const query = hasExactCustomerId
+            ? { customerId: exactCustomerId }
+            : (() => {
+                const numericSearch = Number(search);
+                const hasNumericSearch = search !== "" && Number.isInteger(numericSearch);
+
+                return search
+                    ? {
+                        $or: [
+                            ...(hasNumericSearch ? [{ customerId: numericSearch }] : []),
+                            { name: { $regex: search, $options: "i" } },
+                            { contact: { $regex: search, $options: "i" } },
+                            { address: { $regex: search, $options: "i" } },
+                        ],
+                    }
+                    : {};
+            })();
 
         const customers = await Customer.find(query).sort({ createdAt: -1 });
 
