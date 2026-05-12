@@ -27,6 +27,11 @@ export async function GET() {
         let activeCustomers = 0;
         const transactions: SerializedTransaction[] = [];
         let profitFromLoanInterest = 0;
+        let monthlyCollected = 0;
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+        const monthStartTs = startOfMonth.getTime();
 
         const now = Date.now();
         const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
@@ -76,6 +81,10 @@ export async function GET() {
                 if (transactionDate >= sevenDaysAgo) {
                     collectedLast7Days += Number(transaction.amount || 0);
                 }
+
+                if (transactionDate >= monthStartTs) {
+                    monthlyCollected += Number(transaction.amount || 0);
+                }
             }
         }
 
@@ -94,6 +103,8 @@ export async function GET() {
                 collectedLast7Days,
                 collectedLast30Days,
                 profitFromLoanInterest,
+                monthlyProfit: monthlyCollected,
+                monthName: startOfMonth.toLocaleString(undefined, { month: "long", year: "numeric" }),
                 recentTransactions: transactions.slice(0, 8),
             },
         });
