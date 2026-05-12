@@ -105,7 +105,7 @@ export async function GET() {
                 profitFromLoanInterest,
                 monthlyProfit: monthlyCollected,
                 monthName: startOfMonth.toLocaleString(undefined, { month: "long", year: "numeric" }),
-                recentTransactions: transactions.slice(0, 8),
+                recentTransactions: transactions.slice(0, 5),
             },
         });
     } catch (error) {
