@@ -478,16 +478,18 @@ export default function Collections() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((c) => {
-                const today = new Date();
-                const todayDateString =
-                  today.getFullYear() +
-                  "-" +
-                  String(today.getMonth() + 1).padStart(2, "0") +
-                  "-" +
-                  String(today.getDate()).padStart(2, "0");
+              filtered
+                .sort((a, b) => a.id - b.id)
+                .map((c) => {
+                  const today = new Date();
+                  const todayDateString =
+                    today.getFullYear() +
+                    "-" +
+                    String(today.getMonth() + 1).padStart(2, "0") +
+                    "-" +
+                    String(today.getDate()).padStart(2, "0");
 
-                const todayTransactions = Array.isArray(c.transactions)
+                  const todayTransactions = Array.isArray(c.transactions)
                   ? c.transactions.filter((t: any) => {
                       const transactionDate = new Date(t.date)
                         .toISOString()

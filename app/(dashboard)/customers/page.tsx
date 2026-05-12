@@ -116,7 +116,9 @@ export default function CustomersPage() {
                 </TableCell>
               </TableRow>
             ) : filteredCustomers.length > 0 ? (
-              filteredCustomers.map((c, index) => (
+              filteredCustomers
+                .sort((a, b) => a.id - b.id)
+                .map((c, index) => (
                 <TableRow
                   key={`${String(c.id ?? "missing")}-${String(c.mongoId ?? index)}`}
                   className="hover:bg-zinc-50 transition"

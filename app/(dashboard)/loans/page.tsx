@@ -105,7 +105,9 @@ export default function Loans() {
                     </TableCell>
                   </TableRow>
                 ) : loans.length > 0 ? (
-                  loans.map((loan) => {
+                  loans
+                    .sort((a, b) => a.id - b.id)
+                    .map((loan) => {
                     const totalPayable = loan.totalWithInterest;
 
                     const remaining = totalPayable - loan.paidAmount;
