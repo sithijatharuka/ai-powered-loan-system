@@ -259,6 +259,14 @@ export default function Collections() {
     }
   }
 
+  const editRemainingBalance = editingCustomer
+    ? Math.max(
+        Number(editingCustomer.totalWithInterest || 0) -
+          Number(editingCustomer.paidAmount || 0),
+        0,
+      )
+    : 0;
+
   return (
     <div className="p-6 space-y-4">
       {/* HEADER */}
@@ -397,6 +405,9 @@ export default function Collections() {
               </div>
               <div className="text-sm text-zinc-600">
                 Customer ID: #{editingCustomer?.id ?? "-"}
+              </div>
+              <div className="text-sm text-zinc-600 mt-1">
+                Current remaining balance: Rs. {editRemainingBalance.toLocaleString()}
               </div>
             </div>
 
