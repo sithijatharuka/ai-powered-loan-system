@@ -79,16 +79,31 @@ export default function Collections() {
 
     if (dateFilter === "today") {
       const now = new Date();
-      const today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+      const today =
+        now.getFullYear() +
+        "-" +
+        String(now.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(now.getDate()).padStart(2, "0");
       return createdAtDateOnly === today;
     }
 
     if (dateFilter === "last7days") {
       const now = new Date();
-      const today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+      const today =
+        now.getFullYear() +
+        "-" +
+        String(now.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(now.getDate()).padStart(2, "0");
       const sevenDaysAgo = new Date(now);
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-      const sevenDaysAgoDateOnly = sevenDaysAgo.getFullYear() + '-' + String(sevenDaysAgo.getMonth() + 1).padStart(2, '0') + '-' + String(sevenDaysAgo.getDate()).padStart(2, '0');
+      const sevenDaysAgoDateOnly =
+        sevenDaysAgo.getFullYear() +
+        "-" +
+        String(sevenDaysAgo.getMonth() + 1).padStart(2, "0") +
+        "-" +
+        String(sevenDaysAgo.getDate()).padStart(2, "0");
       return createdAtDateOnly >= sevenDaysAgoDateOnly;
     }
 
