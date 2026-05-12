@@ -85,7 +85,9 @@ export default function Collections() {
   // Header dialog states
   const [dialogSearchId, setDialogSearchId] = useState("");
   const [dialogCustomer, setDialogCustomer] = useState<any | null>(null);
-  const [dialogDate, setDialogDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [dialogDate, setDialogDate] = useState<string>(
+    new Date().toISOString().slice(0, 10),
+  );
   const [dialogLoading, setDialogLoading] = useState(false);
 
   async function searchCustomerById() {
@@ -104,7 +106,10 @@ export default function Collections() {
         return;
       }
 
-      const found = Array.isArray(data.customers) && data.customers.length > 0 ? data.customers[0] : null;
+      const found =
+        Array.isArray(data.customers) && data.customers.length > 0
+          ? data.customers[0]
+          : null;
       setDialogCustomer(found);
     } finally {
       setDialogLoading(false);
@@ -117,11 +122,17 @@ export default function Collections() {
     const paymentAmount = Number(amount);
     if (!Number.isFinite(paymentAmount) || paymentAmount <= 0) return;
 
-    const response = await fetch(`/api/customers/${dialogCustomer.id}/payments`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount: paymentAmount, date: new Date(dialogDate).toISOString() }),
-    });
+    const response = await fetch(
+      `/api/customers/${dialogCustomer.id}/payments`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: paymentAmount,
+          date: new Date(dialogDate).toISOString(),
+        }),
+      },
+    );
 
     if (response.ok) {
       setAmount("");
@@ -178,18 +189,28 @@ export default function Collections() {
                   <div className="p-2 border rounded">
                     <div className="font-medium">{dialogCustomer.name}</div>
                     <div className="text-sm text-zinc-600">
-                      Available balance: Rs. {(dialogCustomer.totalWithInterest - dialogCustomer.paidAmount).toLocaleString()}
+                      Available balance: Rs.{" "}
+                      {(
+                        dialogCustomer.totalWithInterest -
+                        dialogCustomer.paidAmount
+                      ).toLocaleString()}
                     </div>
                   </div>
                 ) : (
                   dialogSearchId && (
-                    <div className="text-sm text-zinc-500">No customer found</div>
+                    <div className="text-sm text-zinc-500">
+                      No customer found
+                    </div>
                   )
                 )}
 
                 <div>
                   <label className="text-sm">Date</label>
-                  <Input type="date" value={dialogDate} onChange={(e) => setDialogDate(e.target.value)} />
+                  <Input
+                    type="date"
+                    value={dialogDate}
+                    onChange={(e) => setDialogDate(e.target.value)}
+                  />
                 </div>
 
                 <div>
