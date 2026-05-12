@@ -449,7 +449,7 @@ export default function Collections() {
               <TableHead>ID</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Contact</TableHead>
-              {/* <TableHead>Balance</TableHead> */}
+              <TableHead>Status</TableHead>
               <TableHead className="text-right">Action</TableHead>
             </TableRow>
           </TableHeader>
@@ -473,12 +473,13 @@ export default function Collections() {
 
                   <TableCell>{c.contact}</TableCell>
 
-                  {/* <TableCell>
-                    <Badge variant="destructive">
-                      Rs.{" "}
-                      {(c.totalWithInterest - c.paidAmount).toLocaleString()}
+                  <TableCell>
+                    <Badge
+                      variant={c.status === "completed" ? "default" : "destructive"}
+                    >
+                      {c.status === "completed" ? "Completed" : "Ongoing"}
                     </Badge>
-                  </TableCell> */}
+                  </TableCell>
 
                   <TableCell className="text-right">
                     <Button

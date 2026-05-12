@@ -25,9 +25,15 @@ function serializeCustomer(customer: {
     dailyPayment: number;
     paidAmount: number;
     transactions: Array<{ amount: number; date: Date; note?: string }>;
+    status?: "ongoing" | "completed";
     createdAt?: Date;
     updatedAt?: Date;
 }) {
+    const remaining = Math.max(
+        Number(customer.totalWithInterest || 0) - Number(customer.paidAmount || 0),
+        0,
+    );
+
     return {
         id: customer.customerId,
         mongoId: customer._id.toString(),
@@ -41,6 +47,7 @@ function serializeCustomer(customer: {
         monthlyPayment: customer.monthlyPayment,
         dailyPayment: customer.dailyPayment,
         paidAmount: customer.paidAmount,
+        status: customer.status ?? (remaining > 0 ? "ongoing" : "completed"),
         transactions: customer.transactions,
         createdAt: customer.createdAt,
         updatedAt: customer.updatedAt,
