@@ -31,7 +31,8 @@ export default function Loans() {
   const [loading, setLoading] = useState(true);
 
   // Helper function to format loan ID as L01, L02, etc.
-  const formatLoanId = (id: number): string => `L${String(id).padStart(2, "0")}`;
+  const formatLoanId = (id: number): string =>
+    `L${String(id).padStart(2, "0")}`;
 
   useEffect(() => {
     async function loadLoans() {
