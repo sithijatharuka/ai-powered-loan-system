@@ -473,7 +473,10 @@ export default function Collections() {
                       size="sm"
                       variant="outline"
                       onClick={() => openEditDialog(c)}
-                      disabled={!Array.isArray(c.transactions) || c.transactions.length === 0}
+                      disabled={
+                        !Array.isArray(c.transactions) ||
+                        c.transactions.length === 0
+                      }
                     >
                       Edit
                     </Button>
