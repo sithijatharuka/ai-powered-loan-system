@@ -315,7 +315,7 @@ export default function Collections() {
               <TableHead>ID</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Contact</TableHead>
-              <TableHead>Balance</TableHead>
+              {/* <TableHead>Balance</TableHead> */}
               <TableHead className="text-right">Action</TableHead>
             </TableRow>
           </TableHeader>
@@ -339,12 +339,12 @@ export default function Collections() {
 
                   <TableCell>{c.contact}</TableCell>
 
-                  <TableCell>
+                  {/* <TableCell>
                     <Badge variant="destructive">
                       Rs.{" "}
                       {(c.totalWithInterest - c.paidAmount).toLocaleString()}
                     </Badge>
-                  </TableCell>
+                  </TableCell> */}
 
                   <TableCell className="text-right">
                     {/* Removed per-row Add Payment button — use header button */}
