@@ -62,7 +62,9 @@ export default function Dashboard() {
   const activeCustomers = summary?.activeCustomers ?? 0;
   const profitFromLoanInterest = summary?.profitFromLoanInterest ?? 0;
   const monthlyProfit = summary?.monthlyProfit ?? 0;
-  const monthName = summary?.monthName ?? new Date().toLocaleString(undefined, { month: "long", year: "numeric" });
+  const monthName =
+    summary?.monthName ??
+    new Date().toLocaleString(undefined, { month: "long", year: "numeric" });
   const recentTransactions = summary?.recentTransactions ?? [];
 
   return (

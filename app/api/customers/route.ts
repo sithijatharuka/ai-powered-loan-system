@@ -83,20 +83,35 @@ export async function GET(request: NextRequest) {
         await connectToDb();
         await backfillCustomerIds();
 
+        const customerIdParam = request.nextUrl.searchParams.get("customerId")?.trim() ?? "";
         const search = request.nextUrl.searchParams.get("search")?.trim() ?? "";
-        const numericSearch = Number(search);
-        const hasNumericSearch = search !== "" && Number.isInteger(numericSearch);
+        const exactCustomerId = Number(customerIdParam);
+        const hasExactCustomerId = customerIdParam !== "" && Number.isInteger(exactCustomerId);
 
-        const query = search
-            ? {
-                $or: [
-                    ...(hasNumericSearch ? [{ customerId: numericSearch }] : []),
-                    { name: { $regex: search, $options: "i" } },
-                    { contact: { $regex: search, $options: "i" } },
-                    { address: { $regex: search, $options: "i" } },
-                ],
-            }
-            : {};
+        if (customerIdParam !== "" && !hasExactCustomerId) {
+            return NextResponse.json(
+                { success: false, message: "customerId must be a valid integer" },
+                { status: 400 }
+            );
+        }
+
+        const query = hasExactCustomerId
+            ? { customerId: exactCustomerId }
+            : (() => {
+                const numericSearch = Number(search);
+                const hasNumericSearch = search !== "" && Number.isInteger(numericSearch);
+
+                return search
+                    ? {
+                        $or: [
+                            ...(hasNumericSearch ? [{ customerId: numericSearch }] : []),
+                            { name: { $regex: search, $options: "i" } },
+                            { contact: { $regex: search, $options: "i" } },
+                            { address: { $regex: search, $options: "i" } },
+                        ],
+                    }
+                    : {};
+            })();
 
         const customers = await Customer.find(query).sort({ createdAt: -1 });
 
