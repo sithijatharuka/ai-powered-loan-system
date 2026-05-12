@@ -56,6 +56,26 @@ export default function Collections() {
     void loadCustomers();
   }, []);
 
+  function toLocalDateKey(value: string | Date | number | null | undefined) {
+    if (!value) {
+      return "";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+      return "";
+    }
+
+    return (
+      date.getFullYear() +
+      "-" +
+      String(date.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(date.getDate()).padStart(2, "0")
+    );
+  }
+
   const filtered = customers.filter((c) => {
     const matchesSearch =
       String(c.id).includes(search) ||
@@ -70,12 +90,15 @@ export default function Collections() {
       return true;
     }
 
-    const createdAt = new Date(c.createdAt);
-    if (Number.isNaN(createdAt.getTime())) {
+    const transactionDateKeys = Array.isArray(c.transactions)
+      ? c.transactions
+          .map((t: any) => toLocalDateKey(t?.date))
+          .filter((dateKey: string) => dateKey !== "")
+      : [];
+
+    if (transactionDateKeys.length === 0) {
       return false;
     }
-
-    const createdAtDateOnly = createdAt.toISOString().slice(0, 10);
 
     if (dateFilter === "today") {
       const now = new Date();
@@ -85,7 +108,8 @@ export default function Collections() {
         String(now.getMonth() + 1).padStart(2, "0") +
         "-" +
         String(now.getDate()).padStart(2, "0");
-      return createdAtDateOnly === today;
+
+      return transactionDateKeys.some((dateKey: string) => dateKey === today);
     }
 
     if (dateFilter === "last7days") {
@@ -104,19 +128,29 @@ export default function Collections() {
         String(sevenDaysAgo.getMonth() + 1).padStart(2, "0") +
         "-" +
         String(sevenDaysAgo.getDate()).padStart(2, "0");
-      return createdAtDateOnly >= sevenDaysAgoDateOnly;
+
+      return transactionDateKeys.some(
+        (dateKey: string) =>
+          dateKey >= sevenDaysAgoDateOnly && dateKey <= today,
+      );
     }
 
     if (dateFilter === "custom") {
-      if (customStartDate && createdAtDateOnly < customStartDate) {
+      if (customStartDate === "" && customEndDate === "") {
         return false;
       }
 
-      if (customEndDate && createdAtDateOnly > customEndDate) {
-        return false;
-      }
+      return transactionDateKeys.some((dateKey: string) => {
+        if (customStartDate && dateKey < customStartDate) {
+          return false;
+        }
 
-      return customStartDate !== "" || customEndDate !== "";
+        if (customEndDate && dateKey > customEndDate) {
+          return false;
+        }
+
+        return true;
+      });
     }
 
     return true;
@@ -517,9 +551,7 @@ export default function Collections() {
 
                   const todayTransactions = Array.isArray(c.transactions)
                     ? c.transactions.filter((t: any) => {
-                        const transactionDate = new Date(t.date)
-                          .toISOString()
-                          .slice(0, 10);
+                        const transactionDate = toLocalDateKey(t.date);
                         return transactionDate === todayDateString;
                       })
                     : [];
@@ -535,9 +567,7 @@ export default function Collections() {
                       : null;
 
                   const latestDate = latestTransaction
-                    ? new Date(latestTransaction.date)
-                        .toISOString()
-                        .slice(0, 10)
+                    ? toLocalDateKey(latestTransaction.date)
                     : "-";
 
                   return (
