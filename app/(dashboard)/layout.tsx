@@ -9,14 +9,16 @@ export default function DashLayout({
   return (
     <div className="flex flex-1">
       <SidebarProvider>
-        <div className="flex min-h-screen w-full">
+        <div className="flex min-h-screen w-full flex-col md:flex-row">
           {/* Sidebar */}
           <AppSidebar />
-          <div className="h-14 flex items-center border-b px-4">
+          <div className="hidden h-14 items-center border-b px-4 md:flex">
             <SidebarTrigger />
           </div>
           {/* MAIN AREA */}
-          <main className="flex-1 overflow-auto p-6">{children}</main>
+          <main className="flex-1 overflow-auto p-6 pb-24 md:pb-6">
+            {children}
+          </main>
         </div>
       </SidebarProvider>
     </div>
