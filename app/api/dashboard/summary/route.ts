@@ -27,7 +27,7 @@ export async function GET() {
         let activeCustomers = 0;
         const transactions: SerializedTransaction[] = [];
         let profitFromLoanInterest = 0;
-        let monthlyCollected = 0;
+        let monthlyProfit = 0;
         const startOfMonth = new Date();
         startOfMonth.setDate(1);
         startOfMonth.setHours(0, 0, 0, 0);
@@ -48,14 +48,12 @@ export async function GET() {
             totalLoanGiven += Number(customer.loanAmount || 0);
             totalCollected += Number(customer.paidAmount || 0);
             pendingLoan += remaining;
-            profitFromLoanInterest += Math.max(
-                Number(customer.totalWithInterest || 0) - Number(customer.loanAmount || 0),
-                0,
-            );
 
             if (remaining > 0) {
                 activeCustomers += 1;
             }
+
+            const interestRate = Number(customer.interestRate || 0);
 
             for (const transaction of customer.transactions ?? []) {
                 const transactionDate = new Date(transaction.date).getTime();
@@ -64,26 +62,30 @@ export async function GET() {
                     continue;
                 }
 
+                const paymentAmount = Number(transaction.amount || 0);
+                const profit = (paymentAmount / (100 + interestRate)) * interestRate;
+
                 const entry = {
                     customerId: Number(customer.customerId ?? 0),
                     customerName: String(customer.name ?? "Unknown"),
-                    amount: Number(transaction.amount || 0),
+                    amount: paymentAmount,
                     date: new Date(transaction.date).toISOString(),
                     note: transaction.note,
                 } satisfies SerializedTransaction;
 
                 transactions.push(entry);
+                profitFromLoanInterest += profit;
 
                 if (transactionDate >= thirtyDaysAgo) {
-                    collectedLast30Days += Number(transaction.amount || 0);
+                    collectedLast30Days += paymentAmount;
                 }
 
                 if (transactionDate >= sevenDaysAgo) {
-                    collectedLast7Days += Number(transaction.amount || 0);
+                    collectedLast7Days += paymentAmount;
                 }
 
                 if (transactionDate >= monthStartTs) {
-                    monthlyCollected += Number(transaction.amount || 0);
+                    monthlyProfit += profit;
                 }
             }
         }
@@ -103,7 +105,7 @@ export async function GET() {
                 collectedLast7Days,
                 collectedLast30Days,
                 profitFromLoanInterest,
-                monthlyProfit: monthlyCollected,
+                monthlyProfit,
                 monthName: startOfMonth.toLocaleString(undefined, { month: "long", year: "numeric" }),
                 recentTransactions: transactions.slice(0, 5),
             },
