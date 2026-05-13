@@ -193,7 +193,7 @@ export default function Loans() {
                         {displayLoanId}
                       </TableCell>
                       <TableCell>{loan.name}</TableCell>
-                      <TableCell>#{loan.id}</TableCell>
+                      <TableCell>{loan.id}</TableCell>
 
                       <TableCell>
                         Rs. {loan.loanAmount.toLocaleString()}
