@@ -28,7 +28,7 @@ function getJwtSecret() {
 }
 
 export function normalizeUsername(username: string) {
-    return username.trim().toLowerCase();
+    return username.trim();
 }
 
 export function signAuthToken(user: AuthUser) {
