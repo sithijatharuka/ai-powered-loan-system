@@ -56,8 +56,8 @@ export default function Loans() {
   const [loading, setLoading] = useState(true);
 
   // Helper function to format loan ID as L01, L02, etc.
-  const formatLoanId = (id: number, recordIndex: number): string =>
-    `L${String(id).padStart(2, "0")}-${String(recordIndex + 1).padStart(2, "0")}`;
+  const formatLoanId = (index: number): string =>
+    `L${String(index).padStart(2, "0")}`;
 
   useEffect(() => {
     async function loadLoans() {
@@ -72,8 +72,8 @@ export default function Loans() {
           return;
         }
 
-        const flattenedLoans = (data.customers ?? []).flatMap(
-          (customer: CustomerLoan) => {
+        const flattenedLoans = (data.customers ?? [])
+          .flatMap((customer: CustomerLoan) => {
             const currentTotal = Number(customer.totalWithInterest || 0);
             const currentPaid = Number(customer.paidAmount || 0);
             const currentRemaining = Math.max(currentTotal - currentPaid, 0);
@@ -82,41 +82,39 @@ export default function Loans() {
 
             const currentLoan = {
               ...customer,
-              loanId: formatLoanId(customer.id, 0),
               status: currentStatus,
               openedAt: customer.openedAt ?? customer.createdAt,
               closedAt:
                 currentStatus === "completed" ? customer.updatedAt : undefined,
             };
 
-            const historyLoans = (customer.loanHistory ?? []).map(
-              (loan, recordIndex) => {
-                const historyRemaining = Math.max(
-                  Number(loan.totalWithInterest || 0) -
-                    Number(loan.paidAmount || 0),
-                  0,
-                );
+            const historyLoans = (customer.loanHistory ?? []).map((loan) => {
+              const historyRemaining = Math.max(
+                Number(loan.totalWithInterest || 0) -
+                  Number(loan.paidAmount || 0),
+                0,
+              );
 
-                return {
-                  ...customer,
-                  loanAmount: loan.loanAmount,
-                  interestRate: loan.interestRate,
-                  duration: loan.duration,
-                  totalWithInterest: loan.totalWithInterest,
-                  paidAmount: loan.paidAmount,
-                  loanId: formatLoanId(customer.id, recordIndex + 1),
-                  status:
-                    loan.status ??
-                    (historyRemaining > 0 ? "ongoing" : "completed"),
-                  openedAt: loan.openedAt,
-                  closedAt: loan.closedAt,
-                };
-              },
-            );
+              return {
+                ...customer,
+                loanAmount: loan.loanAmount,
+                interestRate: loan.interestRate,
+                duration: loan.duration,
+                totalWithInterest: loan.totalWithInterest,
+                paidAmount: loan.paidAmount,
+                status:
+                  loan.status ?? (historyRemaining > 0 ? "ongoing" : "completed"),
+                openedAt: loan.openedAt,
+                closedAt: loan.closedAt,
+              };
+            });
 
             return [currentLoan, ...historyLoans];
-          },
-        );
+          })
+          .map((loan: CustomerLoan, index: number) => ({
+            ...loan,
+            loanId: formatLoanId(index + 1),
+          }));
 
         setLoans(flattenedLoans);
       } finally {
@@ -179,7 +177,8 @@ export default function Loans() {
                 .sort((a, b) => {
                   return a.id - b.id;
                 })
-                .map((loan) => {
+                .map((loan, index) => {
+                  const displayLoanId = formatLoanId(index + 1);
                   const totalPayable = loan.totalWithInterest;
 
                   const remaining = totalPayable - loan.paidAmount;
@@ -190,7 +189,7 @@ export default function Loans() {
                   return (
                     <TableRow key={loan.loanId}>
                       <TableCell className="font-medium">
-                        {loan.loanId}
+                        {displayLoanId}
                       </TableCell>
                       <TableCell>{loan.name}</TableCell>
                       <TableCell>#{loan.id}</TableCell>
