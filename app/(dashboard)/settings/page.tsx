@@ -123,13 +123,13 @@ export default function Settings() {
   }
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-3 sm:p-6 space-y-4">
       {/* HEADER */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Settings</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Settings</h1>
 
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Manage collection officers
           </p>
         </div>
@@ -151,37 +151,43 @@ export default function Settings() {
           }}
         >
           <DialogTrigger asChild>
-            <Button className="cursor-pointer">Add Collection Officer</Button>
+            <Button className="cursor-pointer w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10">
+              Add Collection Officer
+            </Button>
           </DialogTrigger>
 
-          <DialogContent className="sm:max-w-112.5 rounded-2xl">
+          <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-112.5 rounded-2xl p-4 sm:p-6">
             <DialogHeader>
-              <DialogTitle>Add Collection Officer</DialogTitle>
+              <DialogTitle className="text-base sm:text-lg">
+                Add Collection Officer
+              </DialogTitle>
             </DialogHeader>
 
             {/* FORM */}
             <div className="grid grid-cols-1 gap-4 py-4">
               {/* NAME */}
               <div className="space-y-2">
-                <Label>User Name</Label>
+                <Label className="text-xs sm:text-sm">User Name</Label>
 
                 <Input
                   name="name"
                   placeholder="Enter user name"
                   value={formData.name}
                   onChange={handleChange}
+                  className="h-9 sm:h-10 text-xs sm:text-sm"
                 />
               </div>
 
               {/* PHONE */}
               <div className="space-y-2">
-                <Label>Password</Label>
+                <Label className="text-xs sm:text-sm">Password</Label>
 
                 <Input
                   name="password"
                   placeholder="Enter password"
                   value={formData.password}
                   onChange={handleChange}
+                  className="h-9 sm:h-10 text-xs sm:text-sm"
                 />
               </div>
             </div>
@@ -190,7 +196,7 @@ export default function Settings() {
             <div className="flex justify-end">
               <Button
                 onClick={handleAddOfficer}
-                className="rounded-xl"
+                className="rounded-xl w-full sm:w-auto text-xs sm:text-sm h-9 sm:h-10"
                 disabled={saving}
               >
                 {saving ? "Saving..." : "Save Officer"}
@@ -201,16 +207,22 @@ export default function Settings() {
       </div>
 
       {/* OFFICERS TABLE */}
-      <div className="border rounded-xl overflow-hidden bg-white">
+      <div className="border rounded-xl overflow-hidden bg-white overflow-x-auto">
         <Table>
           {/* HEADER */}
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead>
+              <TableHead className="whitespace-nowrap text-xs sm:text-sm">
+                ID
+              </TableHead>
 
-              <TableHead>Name</TableHead>
+              <TableHead className="whitespace-nowrap text-xs sm:text-sm">
+                Name
+              </TableHead>
 
-              <TableHead>Role</TableHead>
+              <TableHead className="whitespace-nowrap text-xs sm:text-sm">
+                Role
+              </TableHead>
             </TableRow>
           </TableHeader>
 
@@ -220,7 +232,7 @@ export default function Settings() {
               <TableRow>
                 <TableCell
                   colSpan={3}
-                  className="h-24 text-center text-zinc-500"
+                  className="h-24 text-center text-zinc-500 text-xs sm:text-sm"
                 >
                   Loading officers...
                 </TableCell>
@@ -228,20 +240,24 @@ export default function Settings() {
             ) : officers.length > 0 ? (
               officers.map((officer) => (
                 <TableRow key={officer.id}>
-                  <TableCell className="font-medium">
+                  <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">
                     {officer.id.slice(-6)}
                   </TableCell>
 
-                  <TableCell>{officer.username}</TableCell>
+                  <TableCell className="text-xs sm:text-sm">
+                    {officer.username}
+                  </TableCell>
 
-                  <TableCell className="capitalize">{officer.role}</TableCell>
+                  <TableCell className="capitalize text-xs sm:text-sm whitespace-nowrap">
+                    {officer.role}
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
                 <TableCell
                   colSpan={3}
-                  className="h-24 text-center text-zinc-500"
+                  className="h-24 text-center text-zinc-500 text-xs sm:text-sm"
                 >
                   No officers found
                 </TableCell>
