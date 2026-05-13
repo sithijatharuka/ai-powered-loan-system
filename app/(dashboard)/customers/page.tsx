@@ -55,16 +55,16 @@ export default function CustomersPage() {
   );
 
   return (
-    <div className="w-full p-6 space-y-4">
+    <div className="w-full p-3 sm:p-6 space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         {/* Title */}
         <h1 className="text-2xl font-bold">Customers</h1>
 
         {/* Right Side */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center w-full sm:w-auto">
           {/* Search */}
-          <div className="relative w-80">
+          <div className="relative flex-1 sm:flex-none sm:w-80">
             <Search
               size={18}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
@@ -72,35 +72,47 @@ export default function CustomersPage() {
 
             <Input
               type="text"
-              placeholder="Search by ID, name, contact, address..."
+              placeholder="Search customers..."
               value={search}
               onChange={(e) => {
                 const value = e.target.value;
                 setSearch(value);
                 void loadCustomers(value);
               }}
-              className="pl-10 h-10 rounded-xl"
+              className="pl-10 h-10 rounded-xl w-full"
             />
           </div>
 
           {/* Add Customer Button */}
-          <AddCustomerDialog onCustomerSaved={() => void loadCustomers()} />
+          <div className="w-full sm:w-auto">
+            <AddCustomerDialog onCustomerSaved={() => void loadCustomers()} />
+          </div>
         </div>
       </div>
       {/* Table */}
-      <div className="rounded-xl border bg-white overflow-hidden">
+      <div className="rounded-xl border bg-white overflow-hidden overflow-x-auto">
         <Table>
           {/* Table Header */}
           <TableHeader className="bg-zinc-50">
             <TableRow>
-              <TableHead className="w-20">ID</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Contact</TableHead>
-              <TableHead>Address</TableHead>
-              <TableHead>Loan</TableHead>
-              <TableHead>Interest</TableHead>
-              <TableHead>Duration</TableHead>
-              <TableHead className="text-right">Action</TableHead>
+              <TableHead className="w-12 sm:w-20">ID</TableHead>
+              <TableHead className="whitespace-nowrap">Name</TableHead>
+              <TableHead className="hidden sm:table-cell whitespace-nowrap">
+                Contact
+              </TableHead>
+              <TableHead className="hidden md:table-cell whitespace-nowrap">
+                Address
+              </TableHead>
+              <TableHead className="whitespace-nowrap">Loan</TableHead>
+              <TableHead className="hidden sm:table-cell whitespace-nowrap">
+                Interest
+              </TableHead>
+              <TableHead className="hidden md:table-cell whitespace-nowrap">
+                Duration
+              </TableHead>
+              <TableHead className="text-right whitespace-nowrap">
+                Action
+              </TableHead>
             </TableRow>
           </TableHeader>
 
@@ -123,25 +135,40 @@ export default function CustomersPage() {
                     key={`${String(c.id ?? "missing")}-${String(c.mongoId ?? index)}`}
                     className="hover:bg-zinc-50 transition"
                   >
-                    <TableCell className="font-medium">{c.id}</TableCell>
+                    <TableCell className="font-medium text-sm sm:text-base">
+                      {c.id}
+                    </TableCell>
 
-                    <TableCell>{c.name}</TableCell>
+                    <TableCell className="text-sm sm:text-base">
+                      {c.name}
+                    </TableCell>
 
-                    <TableCell>{c.contact}</TableCell>
+                    <TableCell className="hidden sm:table-cell text-sm">
+                      {c.contact}
+                    </TableCell>
 
-                    <TableCell>{c.address}</TableCell>
+                    <TableCell className="hidden md:table-cell text-sm">
+                      {c.address}
+                    </TableCell>
 
-                    <TableCell>
+                    <TableCell className="text-xs sm:text-sm font-medium">
                       Rs. {Number(c.loanAmount).toLocaleString()}
                     </TableCell>
 
-                    <TableCell>{c.interestRate}%</TableCell>
+                    <TableCell className="hidden sm:table-cell text-sm">
+                      {c.interestRate}%
+                    </TableCell>
 
-                    <TableCell>{c.duration} months</TableCell>
+                    <TableCell className="hidden md:table-cell text-sm">
+                      {c.duration}mo
+                    </TableCell>
 
                     <TableCell className="text-right">
                       <Link href={`/customers/${c.id}`}>
-                        <Button size="lg" className="rounded-lg cursor-pointer">
+                        <Button
+                          size="sm"
+                          className="rounded-lg cursor-pointer text-xs sm:text-sm"
+                        >
                           View
                         </Button>
                       </Link>
@@ -152,7 +179,7 @@ export default function CustomersPage() {
               <TableRow>
                 <TableCell
                   colSpan={8}
-                  className="h-24 text-center text-zinc-500"
+                  className="h-24 text-center text-zinc-500 text-sm"
                 >
                   No customers found
                 </TableCell>

@@ -322,15 +322,15 @@ export default function Collections() {
     : 0;
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-3 sm:p-6 space-y-4">
       {/* HEADER */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <h1 className="text-2xl font-bold">Collections</h1>
+      <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <h1 className="text-xl sm:text-2xl font-bold">Collections</h1>
 
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+        <div className="flex flex-col gap-2 sm:gap-3 lg:flex-row lg:items-center w-full lg:w-auto">
           <Input
             placeholder="Search by ID or customer..."
-            className="w-full lg:w-80"
+            className="w-full lg:w-80 text-xs sm:text-sm h-9 sm:h-10"
             value={search}
             onChange={(e) => {
               const value = e.target.value;
@@ -340,7 +340,7 @@ export default function Collections() {
           />
 
           <select
-            className="h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="h-9 sm:h-10 rounded-md border border-input bg-background px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm w-full lg:w-auto"
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
           >
@@ -351,16 +351,18 @@ export default function Collections() {
           </select>
 
           {dateFilter === "custom" ? (
-            <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="flex flex-col gap-2 sm:flex-row w-full lg:w-auto">
               <Input
                 type="date"
                 value={customStartDate}
                 onChange={(e) => setCustomStartDate(e.target.value)}
+                className="text-xs sm:text-sm h-9 sm:h-10 flex-1 lg:flex-none"
               />
               <Input
                 type="date"
                 value={customEndDate}
                 onChange={(e) => setCustomEndDate(e.target.value)}
+                className="text-xs sm:text-sm h-9 sm:h-10 flex-1 lg:flex-none"
               />
             </div>
           ) : null}
@@ -381,31 +383,41 @@ export default function Collections() {
             }}
           >
             <DialogTrigger asChild>
-              <Button>Add Payment</Button>
+              <Button className="w-full lg:w-auto text-xs sm:text-sm h-9 sm:h-10">
+                Add Payment
+              </Button>
             </DialogTrigger>
 
-            <DialogContent className="rounded-2xl">
+            <DialogContent className="rounded-2xl w-full sm:w-96">
               <DialogHeader>
-                <DialogTitle>Add Payment</DialogTitle>
+                <DialogTitle className="text-base sm:text-lg">
+                  Add Payment
+                </DialogTitle>
               </DialogHeader>
 
               <div className="space-y-4">
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Input
                     placeholder="Enter customer ID"
                     value={dialogSearchId}
                     onChange={(e) => setDialogSearchId(e.target.value)}
-                    className="w-48"
+                    className="flex-1 text-xs sm:text-sm h-9 sm:h-10"
                   />
-                  <Button onClick={searchCustomerById} disabled={dialogLoading}>
+                  <Button
+                    onClick={searchCustomerById}
+                    disabled={dialogLoading}
+                    className="text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto"
+                  >
                     {dialogLoading ? "Searching..." : "Search"}
                   </Button>
                 </div>
 
                 {dialogCustomer ? (
-                  <div className="rounded-md border p-2">
-                    <div className="font-medium">{dialogCustomer.name}</div>
-                    <div className="text-sm text-zinc-600">
+                  <div className="rounded-md border p-3">
+                    <div className="font-medium text-sm">
+                      {dialogCustomer.name}
+                    </div>
+                    <div className="text-xs sm:text-sm text-zinc-600">
                       Available balance: Rs.{" "}
                       {(
                         dialogCustomer.totalWithInterest -
@@ -415,18 +427,19 @@ export default function Collections() {
                   </div>
                 ) : (
                   dialogSearchId && (
-                    <div className="text-sm text-zinc-500">
+                    <div className="text-xs sm:text-sm text-zinc-500">
                       No customer found
                     </div>
                   )
                 )}
 
                 <div>
-                  <label className="text-sm">Date</label>
+                  <label className="text-xs sm:text-sm">Date</label>
                   <Input
                     type="date"
                     value={dialogDate}
                     onChange={(e) => setDialogDate(e.target.value)}
+                    className="text-xs sm:text-sm h-9 sm:h-10"
                   />
                 </div>
 
@@ -436,11 +449,12 @@ export default function Collections() {
                     placeholder="Enter amount"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
+                    className="text-xs sm:text-sm h-9 sm:h-10"
                   />
                 </div>
 
                 <Button
-                  className="w-full"
+                  className="w-full text-xs sm:text-sm h-9 sm:h-10"
                   onClick={submitDialogPayment}
                   disabled={dialogSubmitLoading}
                 >
@@ -464,31 +478,34 @@ export default function Collections() {
           }
         }}
       >
-        <DialogContent className="rounded-2xl">
+        <DialogContent className="rounded-2xl w-full sm:w-96">
           <DialogHeader>
-            <DialogTitle>Edit Payment</DialogTitle>
+            <DialogTitle className="text-base sm:text-lg">
+              Edit Payment
+            </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="rounded-md border p-3">
-              <div className="font-medium">
+              <div className="font-medium text-sm">
                 {editingCustomer ? editingCustomer.name : "Customer"}
               </div>
-              <div className="text-sm text-zinc-600">
+              <div className="text-xs sm:text-sm text-zinc-600">
                 Customer ID: #{editingCustomer?.id ?? "-"}
               </div>
-              <div className="text-sm text-zinc-600 mt-1">
+              <div className="text-xs sm:text-sm text-zinc-600 mt-1">
                 Current remaining balance: Rs.{" "}
                 {editRemainingBalance.toLocaleString()}
               </div>
             </div>
 
             <div>
-              <label className="text-sm">Date</label>
+              <label className="text-xs sm:text-sm">Date</label>
               <Input
                 type="date"
                 value={editDate}
                 onChange={(e) => setEditDate(e.target.value)}
+                className="text-xs sm:text-sm h-9 sm:h-10"
               />
             </div>
 
@@ -498,11 +515,12 @@ export default function Collections() {
                 placeholder="Enter corrected amount"
                 value={editAmount}
                 onChange={(e) => setEditAmount(e.target.value)}
+                className="text-xs sm:text-sm h-9 sm:h-10"
               />
             </div>
 
             <Button
-              className="w-full"
+              className="w-full text-xs sm:text-sm h-9 sm:h-10"
               onClick={submitEditPayment}
               disabled={editLoading}
             >
@@ -513,17 +531,31 @@ export default function Collections() {
       </Dialog>
 
       {/* TABLE */}
-      <div className="border rounded-xl overflow-hidden bg-white">
+      <div className="border rounded-xl overflow-hidden bg-white overflow-x-auto">
         <Table>
           <TableHeader className="bg-zinc-50">
             <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Today's payment amount</TableHead>
-              <TableHead>Collected amount</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Action</TableHead>
+              <TableHead className="text-xs sm:text-sm whitespace-nowrap">
+                ID
+              </TableHead>
+              <TableHead className="text-xs sm:text-sm whitespace-nowrap">
+                Name
+              </TableHead>
+              <TableHead className="text-xs sm:text-sm whitespace-nowrap hidden sm:table-cell">
+                Today's Pmt
+              </TableHead>
+              <TableHead className="text-xs sm:text-sm whitespace-nowrap hidden md:table-cell">
+                Collected
+              </TableHead>
+              <TableHead className="text-xs sm:text-sm whitespace-nowrap hidden lg:table-cell">
+                Date
+              </TableHead>
+              <TableHead className="text-xs sm:text-sm whitespace-nowrap hidden sm:table-cell">
+                Status
+              </TableHead>
+              <TableHead className="text-xs sm:text-sm whitespace-nowrap text-right">
+                Action
+              </TableHead>
             </TableRow>
           </TableHeader>
 
@@ -532,7 +564,7 @@ export default function Collections() {
               <TableRow>
                 <TableCell
                   colSpan={7}
-                  className="h-24 text-center text-zinc-500"
+                  className="h-24 text-center text-zinc-500 text-xs sm:text-sm"
                 >
                   Loading collections...
                 </TableCell>
@@ -572,25 +604,32 @@ export default function Collections() {
 
                   return (
                     <TableRow key={c.id}>
-                      <TableCell>{c.id}</TableCell>
+                      <TableCell className="text-xs sm:text-sm">
+                        {c.id}
+                      </TableCell>
 
-                      <TableCell className="font-medium">{c.name}</TableCell>
+                      <TableCell className="font-medium text-xs sm:text-sm">
+                        {c.name}
+                      </TableCell>
 
-                      <TableCell>
+                      <TableCell className="text-xs sm:text-sm hidden sm:table-cell">
                         Rs. {todayPaymentAmount.toLocaleString()}
                       </TableCell>
 
-                      <TableCell>
+                      <TableCell className="text-xs sm:text-sm hidden md:table-cell">
                         Rs. {Number(c.paidAmount || 0).toLocaleString()}
                       </TableCell>
 
-                      <TableCell>{latestDate}</TableCell>
+                      <TableCell className="text-xs sm:text-sm hidden lg:table-cell">
+                        {latestDate}
+                      </TableCell>
 
-                      <TableCell>
+                      <TableCell className="text-xs sm:text-sm hidden sm:table-cell">
                         <Badge
                           variant={
                             c.status === "completed" ? "default" : "destructive"
                           }
+                          className="text-xs"
                         >
                           {c.status === "completed" ? "Completed" : "Ongoing"}
                         </Badge>
@@ -605,6 +644,7 @@ export default function Collections() {
                             !Array.isArray(c.transactions) ||
                             c.transactions.length === 0
                           }
+                          className="text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
                         >
                           Edit
                         </Button>
