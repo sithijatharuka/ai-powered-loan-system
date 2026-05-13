@@ -127,38 +127,56 @@ export default function Loans() {
   }, []);
 
   return (
-    <div className="w-full p-6 space-y-4">
+    <div className="w-full p-3 sm:p-6 space-y-4">
       {/* HEADER */}
       <div>
-        <h1 className="text-2xl font-bold">Loans</h1>
+        <h1 className="text-xl sm:text-2xl font-bold">Loans</h1>
 
-        <p className="text-sm text-muted-foreground">
+        <p className="text-xs sm:text-sm text-muted-foreground">
           Individual customer loan details
         </p>
       </div>
 
-      <div className="rounded-xl border bg-white overflow-hidden">
+      <div className="rounded-xl border bg-white overflow-hidden overflow-x-auto">
         <Table>
           {/* TABLE HEADER */}
           <TableHeader>
             <TableRow>
-              <TableHead>Loan ID</TableHead>
+              <TableHead className="whitespace-nowrap text-xs sm:text-sm">
+                Loan ID
+              </TableHead>
 
-              <TableHead>Customer Name</TableHead>
+              <TableHead className="whitespace-nowrap text-xs sm:text-sm">
+                Customer Name
+              </TableHead>
 
-              <TableHead>Customer ID</TableHead>
+              <TableHead className="hidden sm:table-cell whitespace-nowrap text-xs sm:text-sm">
+                Customer ID
+              </TableHead>
 
-              <TableHead>Loan Amount</TableHead>
+              <TableHead className="whitespace-nowrap text-xs sm:text-sm">
+                Loan Amount
+              </TableHead>
 
-              <TableHead>Interest</TableHead>
+              <TableHead className="hidden md:table-cell whitespace-nowrap text-xs sm:text-sm">
+                Interest
+              </TableHead>
 
-              <TableHead>Duration</TableHead>
+              <TableHead className="hidden md:table-cell whitespace-nowrap text-xs sm:text-sm">
+                Duration
+              </TableHead>
 
-              <TableHead>Total Payable</TableHead>
+              <TableHead className="hidden lg:table-cell whitespace-nowrap text-xs sm:text-sm">
+                Total Payable
+              </TableHead>
 
-              <TableHead>Remaining</TableHead>
+              <TableHead className="whitespace-nowrap text-xs sm:text-sm">
+                Remaining
+              </TableHead>
 
-              <TableHead>Status</TableHead>
+              <TableHead className="whitespace-nowrap text-xs sm:text-sm">
+                Status
+              </TableHead>
             </TableRow>
           </TableHeader>
 
@@ -168,7 +186,7 @@ export default function Loans() {
               <TableRow>
                 <TableCell
                   colSpan={10}
-                  className="h-24 text-center text-zinc-500"
+                  className="h-24 text-center text-zinc-500 text-xs sm:text-sm"
                 >
                   Loading loans...
                 </TableCell>
@@ -189,35 +207,48 @@ export default function Loans() {
 
                   return (
                     <TableRow key={loan.loanId}>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">
                         {displayLoanId}
                       </TableCell>
-                      <TableCell>{loan.name}</TableCell>
-                      <TableCell>{loan.id}</TableCell>
+                      <TableCell className="text-xs sm:text-sm whitespace-nowrap">
+                        {loan.name}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell text-xs sm:text-sm whitespace-nowrap">
+                        {loan.id}
+                      </TableCell>
 
-                      <TableCell>
+                      <TableCell className="text-xs sm:text-sm whitespace-nowrap">
                         Rs. {loan.loanAmount.toLocaleString()}
                       </TableCell>
 
-                      <TableCell>{loan.interestRate}%</TableCell>
+                      <TableCell className="hidden md:table-cell text-xs sm:text-sm whitespace-nowrap">
+                        {loan.interestRate}%
+                      </TableCell>
 
-                      <TableCell>{loan.duration} Months</TableCell>
+                      <TableCell className="hidden md:table-cell text-xs sm:text-sm whitespace-nowrap">
+                        {loan.duration} Months
+                      </TableCell>
 
-                      <TableCell className="font-medium">
+                      <TableCell className="hidden lg:table-cell font-medium text-xs sm:text-sm whitespace-nowrap">
                         Rs. {totalPayable.toLocaleString()}
                       </TableCell>
 
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">
                         Rs. {remaining.toLocaleString()}
                       </TableCell>
 
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">
                         {completed ? (
-                          <Badge className="bg-green-500" variant="default">
+                          <Badge
+                            className="bg-green-500 text-xs"
+                            variant="default"
+                          >
                             Completed
                           </Badge>
                         ) : (
-                          <Badge variant="destructive">Active</Badge>
+                          <Badge className="text-xs" variant="destructive">
+                            Active
+                          </Badge>
                         )}
                       </TableCell>
                     </TableRow>
@@ -227,7 +258,7 @@ export default function Loans() {
               <TableRow>
                 <TableCell
                   colSpan={10}
-                  className="h-24 text-center text-zinc-500"
+                  className="h-24 text-center text-zinc-500 text-xs sm:text-sm"
                 >
                   No loans found
                 </TableCell>
