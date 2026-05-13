@@ -177,13 +177,6 @@ export default function Loans() {
             ) : loans.length > 0 ? (
               loans
                 .sort((a, b) => {
-                  const aTime = new Date(a.openedAt ?? 0).getTime();
-                  const bTime = new Date(b.openedAt ?? 0).getTime();
-
-                  if (aTime !== bTime) {
-                    return bTime - aTime;
-                  }
-
                   return a.id - b.id;
                 })
                 .map((loan) => {
