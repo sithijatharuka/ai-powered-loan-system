@@ -151,7 +151,7 @@ export default function Settings() {
           }}
         >
           <DialogTrigger asChild>
-            <Button className="rounded-xl">Add Collection Officer</Button>
+            <Button className="cursor-pointer">Add Collection Officer</Button>
           </DialogTrigger>
 
           <DialogContent className="sm:max-w-112.5 rounded-2xl">
@@ -229,7 +229,7 @@ export default function Settings() {
               officers.map((officer) => (
                 <TableRow key={officer.id}>
                   <TableCell className="font-medium">
-                    #{officer.id.slice(-6)}
+                    {officer.id.slice(-6)}
                   </TableCell>
 
                   <TableCell>{officer.username}</TableCell>

@@ -572,7 +572,7 @@ export default function Collections() {
 
                   return (
                     <TableRow key={c.id}>
-                      <TableCell>#{c.id}</TableCell>
+                      <TableCell>{c.id}</TableCell>
 
                       <TableCell className="font-medium">{c.name}</TableCell>
 

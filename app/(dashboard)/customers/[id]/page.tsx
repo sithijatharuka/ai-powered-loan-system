@@ -14,6 +14,7 @@ import { connectToDb } from "@/lib/dbConnect";
 import { Customer } from "@/lib/model/customerModel";
 import { notFound } from "next/navigation";
 import AddLoanDialog from "@/components/AddLoanDialog";
+import DeleteCustomerDialog from "@/components/DeleteCustomerDialog";
 
 type CustomerTransaction = {
   amount: number;
@@ -206,6 +207,11 @@ export default async function CustomerDetails({
                 Complete the current loan to unlock a new loan.
               </div>
             )}
+
+            <DeleteCustomerDialog
+              customerId={customer.customerId}
+              customerName={customer.name}
+            />
           </div>
         </div>
       </div>

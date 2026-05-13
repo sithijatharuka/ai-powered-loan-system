@@ -157,7 +157,7 @@ export default function Dashboard() {
                 recentTransactions.map((t) => (
                   <TableRow key={`${t.customerId}-${t.date}-${t.amount}`}>
                     <TableCell>
-                      #{t.customerId} • {t.customerName}
+                      {t.customerId} - {t.customerName}
                     </TableCell>
                     <TableCell>
                       {new Date(t.date).toLocaleDateString()}

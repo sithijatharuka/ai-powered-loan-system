@@ -123,7 +123,7 @@ export default function CustomersPage() {
                     key={`${String(c.id ?? "missing")}-${String(c.mongoId ?? index)}`}
                     className="hover:bg-zinc-50 transition"
                   >
-                    <TableCell className="font-medium">#{c.id}</TableCell>
+                    <TableCell className="font-medium">{c.id}</TableCell>
 
                     <TableCell>{c.name}</TableCell>
 
