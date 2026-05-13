@@ -103,7 +103,8 @@ export default function Loans() {
                 totalWithInterest: loan.totalWithInterest,
                 paidAmount: loan.paidAmount,
                 status:
-                  loan.status ?? (historyRemaining > 0 ? "ongoing" : "completed"),
+                  loan.status ??
+                  (historyRemaining > 0 ? "ongoing" : "completed"),
                 openedAt: loan.openedAt,
                 closedAt: loan.closedAt,
               };
