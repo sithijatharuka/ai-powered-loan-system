@@ -65,7 +65,9 @@ export default function Dashboard() {
   const monthName =
     summary?.monthName ??
     new Date().toLocaleString(undefined, { month: "long", year: "numeric" });
-  const recentTransactions = summary?.recentTransactions ?? [];
+  const recentTransactions = [...(summary?.recentTransactions ?? [])].sort(
+    (a, b) => a.customerId - b.customerId,
+  );
 
   return (
     <div className="p-6 space-y-6">
