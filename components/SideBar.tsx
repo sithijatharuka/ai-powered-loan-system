@@ -75,31 +75,31 @@ export default function AppSidebar() {
   if (isMobile) {
     return (
       <nav className="fixed inset-x-0 bottom-0 z-50 border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/80 md:hidden">
-        <div className="grid grid-flow-col gap-1 px-2 py-2">
-          {visibleMenu.map((item) => {
-            const active = pathname === item.href;
+        <div className="flex min-w-0 gap-1 overflow-x-auto px-2 py-2">
+            {visibleMenu.map((item) => {
+              const active = pathname === item.href;
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={active ? "page" : undefined}
-                className={`flex flex-1 flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-[11px] font-medium transition-colors ${
-                  active
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
-              >
-                <item.icon size={18} />
-                <span className="truncate">{item.title}</span>
-              </Link>
-            );
-          })}
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={active ? "page" : undefined}
+                  className={`flex shrink-0 flex-col items-center justify-center gap-1 rounded-xl px-3 py-2 text-[11px] font-medium transition-colors ${
+                    active
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+                >
+                  <item.icon size={18} />
+                  <span className="truncate">{item.title}</span>
+                </Link>
+              );
+            })}
 
           <button
             type="button"
             onClick={handleLogout}
-            className="flex flex-1 flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="flex shrink-0 flex-col items-center justify-center gap-1 rounded-xl px-3 py-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <LogOut size={18} />
             <span>Logout</span>
