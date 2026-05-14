@@ -554,9 +554,6 @@ export default function Collections() {
               <TableHead className="text-xs sm:text-sm whitespace-nowrap hidden sm:table-cell">
                 Today's Pmt
               </TableHead>
-              <TableHead className="text-xs sm:text-sm whitespace-nowrap hidden md:table-cell">
-                Collected
-              </TableHead>
               <TableHead className="text-xs sm:text-sm whitespace-nowrap hidden lg:table-cell">
                 Date
               </TableHead>
@@ -624,10 +621,6 @@ export default function Collections() {
 
                       <TableCell className="text-xs sm:text-sm hidden sm:table-cell">
                         Rs. {todayPaymentAmount.toLocaleString()}
-                      </TableCell>
-
-                      <TableCell className="text-xs sm:text-sm hidden md:table-cell">
-                        Rs. {Number(c.paidAmount || 0).toLocaleString()}
                       </TableCell>
 
                       <TableCell className="text-xs sm:text-sm hidden lg:table-cell">
