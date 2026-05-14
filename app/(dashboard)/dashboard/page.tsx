@@ -121,15 +121,6 @@ export default function Dashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Profit from Loan Interest</CardTitle>
-          </CardHeader>
-          <CardContent className="text-xl font-bold text-blue-600">
-            {formatCurrency(profitFromLoanInterest)}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
             <CardTitle>Monthly Profit — {monthName}</CardTitle>
           </CardHeader>
           <CardContent className="text-xl font-bold text-indigo-600">
