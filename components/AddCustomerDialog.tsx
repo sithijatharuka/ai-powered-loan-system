@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,8 @@ export default function AddCustomerDialog({
 
   const [saving, setSaving] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [nextCustomerId, setNextCustomerId] = useState<number | null>(null);
+  const [loadingNextCustomerId, setLoadingNextCustomerId] = useState(false);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setFormData({
@@ -39,6 +41,32 @@ export default function AddCustomerDialog({
       [e.target.name]: e.target.value,
     });
   }
+
+  async function loadNextCustomerId() {
+    setLoadingNextCustomerId(true);
+
+    try {
+      const response = await fetch("/api/customers/next-id");
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setNextCustomerId(null);
+        return;
+      }
+
+      setNextCustomerId(Number(data.nextCustomerId));
+    } catch {
+      setNextCustomerId(null);
+    } finally {
+      setLoadingNextCustomerId(false);
+    }
+  }
+
+  useEffect(() => {
+    if (dialogOpen) {
+      void loadNextCustomerId();
+    }
+  }, [dialogOpen]);
 
   // CALCULATIONS
 
@@ -84,6 +112,7 @@ export default function AddCustomerDialog({
 
       toast.success("Customer saved successfully!");
       onCustomerSaved?.();
+      await loadNextCustomerId();
       setFormData({
         name: "",
         contact: "",
@@ -129,7 +158,7 @@ export default function AddCustomerDialog({
         <DialogHeader>
           <DialogTitle>Add New Customer</DialogTitle>
           <Badge className="rounded-full p-3 bg-blue-50 text-blue-600 border border-blue-200">
-            Customer #{1}
+            Customer #{loadingNextCustomerId ? "..." : nextCustomerId ?? "-"}
           </Badge>
         </DialogHeader>
 
