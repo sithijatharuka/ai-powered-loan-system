@@ -34,6 +34,8 @@ export default function Dashboard() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const formatCurrency = (amount: number) => `Rs. ${amount.toFixed(2)}`;
+
   useEffect(() => {
     async function loadSummary() {
       setLoading(true);
@@ -122,7 +124,7 @@ export default function Dashboard() {
             <CardTitle>Profit from Loan Interest</CardTitle>
           </CardHeader>
           <CardContent className="text-xl font-bold text-blue-600">
-            Rs. {profitFromLoanInterest.toLocaleString()}
+            {formatCurrency(profitFromLoanInterest)}
           </CardContent>
         </Card>
 
@@ -131,7 +133,7 @@ export default function Dashboard() {
             <CardTitle>Monthly Profit — {monthName}</CardTitle>
           </CardHeader>
           <CardContent className="text-xl font-bold text-indigo-600">
-            Rs. {monthlyProfit.toLocaleString()}
+            {formatCurrency(monthlyProfit)}
           </CardContent>
         </Card>
       </div>
