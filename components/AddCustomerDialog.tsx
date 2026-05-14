@@ -158,7 +158,7 @@ export default function AddCustomerDialog({
         <DialogHeader>
           <DialogTitle>Add New Customer</DialogTitle>
           <Badge className="rounded-full p-3 bg-blue-50 text-blue-600 border border-blue-200">
-            Customer #{loadingNextCustomerId ? "..." : nextCustomerId ?? "-"}
+            Customer #{loadingNextCustomerId ? "..." : (nextCustomerId ?? "-")}
           </Badge>
         </DialogHeader>
 
