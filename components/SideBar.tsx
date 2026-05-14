@@ -9,6 +9,7 @@ import {
   Users,
   Banknote,
   FileText,
+  TrendingUp,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -32,6 +33,7 @@ const menu = [
   { title: "Customers", href: "/customers", icon: Users },
   { title: "Collections", href: "/collections", icon: FileText },
   { title: "Loans", href: "/loans", icon: Banknote },
+  { title: "Profits", href: "/profits", icon: TrendingUp },
   { title: "Settings", href: "/settings", icon: Settings },
 ];
 
