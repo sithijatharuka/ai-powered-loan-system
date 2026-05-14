@@ -197,6 +197,16 @@ export default function Collections() {
   const [editTransactionIndex, setEditTransactionIndex] = useState<number>(-1);
   const [editLoading, setEditLoading] = useState(false);
 
+  const formatCollectionId = (id: number | string | null | undefined) => {
+    const numericId = Number(id);
+
+    if (!Number.isInteger(numericId) || numericId <= 0) {
+      return "-";
+    }
+
+    return `C${String(numericId).padStart(2, "0")}`;
+  };
+
   async function searchCustomerById() {
     const customerId = Number(dialogSearchId.trim());
     if (!Number.isInteger(customerId) || customerId <= 0) {
@@ -491,7 +501,7 @@ export default function Collections() {
                 {editingCustomer ? editingCustomer.name : "Customer"}
               </div>
               <div className="text-xs sm:text-sm text-zinc-600">
-                Customer ID: #{editingCustomer?.id ?? "-"}
+                Customer ID: {formatCollectionId(editingCustomer?.id)}
               </div>
               <div className="text-xs sm:text-sm text-zinc-600 mt-1">
                 Current remaining balance: Rs.{" "}
@@ -536,16 +546,13 @@ export default function Collections() {
           <TableHeader className="bg-zinc-50">
             <TableRow>
               <TableHead className="text-xs sm:text-sm whitespace-nowrap">
-                ID
+                Collection ID
               </TableHead>
               <TableHead className="text-xs sm:text-sm whitespace-nowrap">
                 Name
               </TableHead>
               <TableHead className="text-xs sm:text-sm whitespace-nowrap hidden sm:table-cell">
                 Today's Pmt
-              </TableHead>
-              <TableHead className="text-xs sm:text-sm whitespace-nowrap hidden md:table-cell">
-                Collected
               </TableHead>
               <TableHead className="text-xs sm:text-sm whitespace-nowrap hidden lg:table-cell">
                 Date
@@ -605,7 +612,7 @@ export default function Collections() {
                   return (
                     <TableRow key={c.id}>
                       <TableCell className="text-xs sm:text-sm">
-                        {c.id}
+                        {formatCollectionId(c.id)}
                       </TableCell>
 
                       <TableCell className="font-medium text-xs sm:text-sm">
@@ -614,10 +621,6 @@ export default function Collections() {
 
                       <TableCell className="text-xs sm:text-sm hidden sm:table-cell">
                         Rs. {todayPaymentAmount.toLocaleString()}
-                      </TableCell>
-
-                      <TableCell className="text-xs sm:text-sm hidden md:table-cell">
-                        Rs. {Number(c.paidAmount || 0).toLocaleString()}
                       </TableCell>
 
                       <TableCell className="text-xs sm:text-sm hidden lg:table-cell">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -32,13 +32,51 @@ export default function AddCustomerDialog({
 
   const [saving, setSaving] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [nextCustomerId, setNextCustomerId] = useState<number | null>(null);
+  const [loadingNextCustomerId, setLoadingNextCustomerId] = useState(false);
+  const [contactError, setContactError] = useState("");
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.name === "contact" && contactError) {
+      setContactError("");
+    }
+
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   }
+
+  function isValidPhoneNumber(value: string) {
+    const normalized = value.trim().replace(/[\s()-]/g, "");
+    return /^(?:0[0-9]{9}|\+94[0-9]{9})$/.test(normalized);
+  }
+
+  async function loadNextCustomerId() {
+    setLoadingNextCustomerId(true);
+
+    try {
+      const response = await fetch("/api/customers/next-id");
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setNextCustomerId(null);
+        return;
+      }
+
+      setNextCustomerId(Number(data.nextCustomerId));
+    } catch {
+      setNextCustomerId(null);
+    } finally {
+      setLoadingNextCustomerId(false);
+    }
+  }
+
+  useEffect(() => {
+    if (dialogOpen) {
+      void loadNextCustomerId();
+    }
+  }, [dialogOpen]);
 
   // CALCULATIONS
 
@@ -56,6 +94,13 @@ export default function AddCustomerDialog({
   const dailyPayment = duration > 0 ? totalWithInterest / (duration * 30) : 0;
 
   async function handleSubmit() {
+    const contactValue = formData.contact.trim();
+
+    if (!isValidPhoneNumber(contactValue)) {
+      setContactError("Invalid Sri Lankan phone number");
+      return;
+    }
+
     try {
       setSaving(true);
 
@@ -64,6 +109,7 @@ export default function AddCustomerDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          contact: contactValue,
           loanAmount: loan,
           interestRate: monthlyRate,
           duration,
@@ -84,6 +130,7 @@ export default function AddCustomerDialog({
 
       toast.success("Customer saved successfully!");
       onCustomerSaved?.();
+      await loadNextCustomerId();
       setFormData({
         name: "",
         contact: "",
@@ -92,6 +139,7 @@ export default function AddCustomerDialog({
         interestRate: "",
         duration: "",
       });
+      setContactError("");
       setDialogOpen(false);
     } catch {
       toast.error("Failed to save customer. Please try again.");
@@ -114,6 +162,7 @@ export default function AddCustomerDialog({
             interestRate: "",
             duration: "",
           });
+          setContactError("");
         }
       }}
     >
@@ -129,7 +178,7 @@ export default function AddCustomerDialog({
         <DialogHeader>
           <DialogTitle>Add New Customer</DialogTitle>
           <Badge className="rounded-full p-3 bg-blue-50 text-blue-600 border border-blue-200">
-            Customer #{1}
+            Customer #{loadingNextCustomerId ? "..." : (nextCustomerId ?? "-")}
           </Badge>
         </DialogHeader>
 
@@ -145,10 +194,17 @@ export default function AddCustomerDialog({
           <div className="space-y-2">
             <Label>Contact</Label>
             <Input
+              type="tel"
+              inputMode="tel"
+              placeholder="Enter phone number"
               name="contact"
               value={formData.contact}
               onChange={handleChange}
+              aria-invalid={Boolean(contactError)}
             />
+            {contactError ? (
+              <p className="text-xs text-red-600">{contactError}</p>
+            ) : null}
           </div>
 
           {/* Address */}

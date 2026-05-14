@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -114,7 +115,14 @@ export default function AppSidebar() {
       {/* BRAND */}
       <SidebarContent>
         <div className="px-4 py-4">
-          <h1 className="text-xl font-bold text-primary">LoanFlow</h1>
+          <Image
+            src="/AYC_LOGO.png"
+            alt="AYC Logo"
+            width={50}
+            height={5}
+            priority
+            className="h-auto w-20 max-w-full object-contain"
+          />
         </div>
 
         <SidebarGroup>
