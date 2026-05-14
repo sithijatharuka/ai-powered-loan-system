@@ -139,7 +139,7 @@ export default function AddCustomerDialog({
         interestRate: "",
         duration: "",
       });
-        setContactError("");
+      setContactError("");
       setDialogOpen(false);
     } catch {
       toast.error("Failed to save customer. Please try again.");
