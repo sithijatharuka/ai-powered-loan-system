@@ -77,7 +77,7 @@ export default function Dashboard() {
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="text-sm text-muted-foreground">
-          Live loan portfolio overview from MongoDB
+          Live loan portfolio overview
         </p>
       </div>
 

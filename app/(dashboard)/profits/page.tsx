@@ -47,8 +47,12 @@ function toMonthInputValue(date: Date) {
 
 export default function Profits() {
   const [filter, setFilter] = useState<ProfitFilter>("today");
-  const [customStartDate, setCustomStartDate] = useState(toDateInputValue(new Date()));
-  const [customEndDate, setCustomEndDate] = useState(toDateInputValue(new Date()));
+  const [customStartDate, setCustomStartDate] = useState(
+    toDateInputValue(new Date()),
+  );
+  const [customEndDate, setCustomEndDate] = useState(
+    toDateInputValue(new Date()),
+  );
   const [month, setMonth] = useState(toMonthInputValue(new Date()));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -90,7 +94,9 @@ export default function Profits() {
           params.set("month", month);
         }
 
-        const response = await fetch(`/api/dashboard/profits?${params.toString()}`);
+        const response = await fetch(
+          `/api/dashboard/profits?${params.toString()}`,
+        );
         const result = await response.json();
 
         if (!response.ok || !result.success) {
@@ -129,7 +135,10 @@ export default function Profits() {
           <div className="flex flex-col gap-3 md:flex-row md:items-end">
             <div className="space-y-1">
               <div className="text-sm font-medium">Range Type</div>
-              <Select value={filter} onValueChange={(value) => setFilter(value as ProfitFilter)}>
+              <Select
+                value={filter}
+                onValueChange={(value) => setFilter(value as ProfitFilter)}
+              >
                 <SelectTrigger className="w-55">
                   <SelectValue placeholder="Select filter" />
                 </SelectTrigger>
@@ -223,14 +232,21 @@ export default function Profits() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-20 text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={5}
+                    className="h-20 text-center text-muted-foreground"
+                  >
                     Loading profits...
                   </TableCell>
                 </TableRow>
               ) : data.rows.length > 0 ? (
                 data.rows.map((row) => (
-                  <TableRow key={`${row.customerId}-${row.date}-${row.paymentAmount}`}>
-                    <TableCell>{new Date(row.date).toLocaleDateString()}</TableCell>
+                  <TableRow
+                    key={`${row.customerId}-${row.date}-${row.paymentAmount}`}
+                  >
+                    <TableCell>
+                      {new Date(row.date).toLocaleDateString()}
+                    </TableCell>
                     <TableCell>
                       {row.customerId} - {row.customerName}
                     </TableCell>
@@ -245,7 +261,10 @@ export default function Profits() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                  <TableCell
+                    colSpan={5}
+                    className="h-24 text-center text-muted-foreground"
+                  >
                     No profit records for this filter
                   </TableCell>
                 </TableRow>
