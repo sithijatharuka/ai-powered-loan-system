@@ -34,12 +34,22 @@ export default function AddCustomerDialog({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [nextCustomerId, setNextCustomerId] = useState<number | null>(null);
   const [loadingNextCustomerId, setLoadingNextCustomerId] = useState(false);
+  const [contactError, setContactError] = useState("");
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.name === "contact" && contactError) {
+      setContactError("");
+    }
+
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
+  }
+
+  function isValidPhoneNumber(value: string) {
+    const normalized = value.trim().replace(/[\s()-]/g, "");
+    return /^(?:0[0-9]{9}|\+94[0-9]{9})$/.test(normalized);
   }
 
   async function loadNextCustomerId() {
@@ -84,6 +94,13 @@ export default function AddCustomerDialog({
   const dailyPayment = duration > 0 ? totalWithInterest / (duration * 30) : 0;
 
   async function handleSubmit() {
+    const contactValue = formData.contact.trim();
+
+    if (!isValidPhoneNumber(contactValue)) {
+      setContactError("Invalid Sri Lankan phone number");
+      return;
+    }
+
     try {
       setSaving(true);
 
@@ -92,6 +109,7 @@ export default function AddCustomerDialog({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
+          contact: contactValue,
           loanAmount: loan,
           interestRate: monthlyRate,
           duration,
@@ -121,6 +139,7 @@ export default function AddCustomerDialog({
         interestRate: "",
         duration: "",
       });
+        setContactError("");
       setDialogOpen(false);
     } catch {
       toast.error("Failed to save customer. Please try again.");
@@ -143,6 +162,7 @@ export default function AddCustomerDialog({
             interestRate: "",
             duration: "",
           });
+          setContactError("");
         }
       }}
     >
@@ -174,10 +194,17 @@ export default function AddCustomerDialog({
           <div className="space-y-2">
             <Label>Contact</Label>
             <Input
+              type="tel"
+              inputMode="tel"
+              placeholder="Enter phone number"
               name="contact"
               value={formData.contact}
               onChange={handleChange}
+              aria-invalid={Boolean(contactError)}
             />
+            {contactError ? (
+              <p className="text-xs text-red-600">{contactError}</p>
+            ) : null}
           </div>
 
           {/* Address */}
