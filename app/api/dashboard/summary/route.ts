@@ -12,6 +12,8 @@ type SerializedTransaction = {
     amount: number;
     date: string;
     note?: string;
+    loanStatus?: "ongoing" | "completed";
+    remaining?: number;
 };
 
 export async function GET() {
@@ -79,6 +81,8 @@ export async function GET() {
                     amount: paymentAmount,
                     date: new Date(transaction.date).toISOString(),
                     note: transaction.note,
+                    loanStatus: remaining > 0 ? "ongoing" : "completed",
+                    remaining,
                 } satisfies SerializedTransaction;
 
                 transactions.push(entry);

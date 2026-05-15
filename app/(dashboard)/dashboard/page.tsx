@@ -30,6 +30,8 @@ type DashboardSummary = {
     amount: number;
     date: string;
     note?: string;
+    loanStatus?: "ongoing" | "completed";
+    remaining?: number;
   }>;
 };
 
@@ -74,7 +76,7 @@ export default function Dashboard() {
     summary?.monthName ??
     new Date().toLocaleString(undefined, { month: "long" });
   const recentTransactions = [...(summary?.recentTransactions ?? [])].sort(
-    (a, b) => a.customerId - b.customerId,
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
   );
 
   return (
@@ -175,6 +177,7 @@ export default function Dashboard() {
             <TableHeader>
               <TableRow>
                 <TableHead>Customer</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Amount</TableHead>
               </TableRow>
@@ -186,6 +189,17 @@ export default function Dashboard() {
                   <TableRow key={`${t.customerId}-${t.date}-${t.amount}`}>
                     <TableCell>
                       {t.customerId} - {t.customerName}
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={
+                          t.loanStatus === "completed"
+                            ? "text-green-600 font-medium"
+                            : "text-orange-600 font-medium"
+                        }
+                      >
+                        {t.loanStatus === "completed" ? "Completed" : "Ongoing"}
+                      </span>
                     </TableCell>
                     <TableCell>
                       {new Date(t.date).toLocaleDateString()}
