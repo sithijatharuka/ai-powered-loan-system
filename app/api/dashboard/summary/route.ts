@@ -12,6 +12,8 @@ type SerializedTransaction = {
     amount: number;
     date: string;
     note?: string;
+    loanStatus?: "ongoing" | "completed";
+    remaining?: number;
 };
 
 export async function GET() {
@@ -28,6 +30,8 @@ export async function GET() {
         const transactions: SerializedTransaction[] = [];
         let profitFromLoanInterest = 0;
         let monthlyProfit = 0;
+        let monthlyCollected = 0;
+        let monthlyLoanGiven = 0;
         const startOfMonth = new Date();
         startOfMonth.setDate(1);
         startOfMonth.setHours(0, 0, 0, 0);
@@ -53,6 +57,12 @@ export async function GET() {
                 activeCustomers += 1;
             }
 
+            // Count loan given in current month by customer creation date
+            const createdTs = new Date(customer.createdAt).getTime();
+            if (!Number.isNaN(createdTs) && createdTs >= monthStartTs) {
+                monthlyLoanGiven += Number(customer.loanAmount || 0);
+            }
+
             const interestRate = Number(customer.interestRate || 0);
 
             for (const transaction of customer.transactions ?? []) {
@@ -71,10 +81,15 @@ export async function GET() {
                     amount: paymentAmount,
                     date: new Date(transaction.date).toISOString(),
                     note: transaction.note,
+                    loanStatus: remaining > 0 ? "ongoing" : "completed",
+                    remaining,
                 } satisfies SerializedTransaction;
 
                 transactions.push(entry);
                 profitFromLoanInterest += profit;
+                if (transactionDate >= monthStartTs) {
+                    monthlyCollected += paymentAmount;
+                }
 
                 if (transactionDate >= thirtyDaysAgo) {
                     collectedLast30Days += paymentAmount;
@@ -106,7 +121,10 @@ export async function GET() {
                 collectedLast30Days,
                 profitFromLoanInterest,
                 monthlyProfit,
-                monthName: startOfMonth.toLocaleString(undefined, { month: "long", year: "numeric" }),
+                monthlyCollected,
+                monthlyLoanGiven,
+                totalCustomers: customers.length,
+                monthName: startOfMonth.toLocaleString(undefined, { month: "long" }),
                 recentTransactions: transactions.slice(0, 5),
             },
         });

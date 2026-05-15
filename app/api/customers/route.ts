@@ -11,6 +11,44 @@ function toNumber(value: unknown) {
     return Number.isFinite(number) ? number : NaN;
 }
 
+function normalizePhoneNumber(value: string) {
+    return value.trim().replace(/\D/g, "");
+}
+
+function isValidPhoneNumber(value: string) {
+    return /^0\d{9}$/.test(value);
+}
+
+function getDuplicateField(error: unknown) {
+    const duplicateError = error as {
+        code?: number;
+        keyPattern?: Record<string, number>;
+        message?: string;
+    };
+
+    if (duplicateError?.code !== 11000) {
+        return null;
+    }
+
+    if (duplicateError.keyPattern?.customerId) {
+        return "customerId";
+    }
+
+    if (duplicateError.keyPattern?.contact) {
+        return "contact";
+    }
+
+    if (duplicateError.message?.includes("customerId")) {
+        return "customerId";
+    }
+
+    if (duplicateError.message?.includes("contact")) {
+        return "contact";
+    }
+
+    return "unknown";
+}
+
 function serializeCustomer(customer: {
     customerId?: number;
     _id: { toString(): string };
@@ -104,6 +142,7 @@ export async function GET(request: NextRequest) {
         await connectToDb();
         await backfillCustomerIds();
 
+        const identifier = request.nextUrl.searchParams.get("identifier")?.trim() ?? "";
         const customerIdParam = request.nextUrl.searchParams.get("customerId")?.trim() ?? "";
         const search = request.nextUrl.searchParams.get("search")?.trim() ?? "";
         const exactCustomerId = Number(customerIdParam);
@@ -114,6 +153,30 @@ export async function GET(request: NextRequest) {
                 { success: false, message: "customerId must be a valid integer" },
                 { status: 400 }
             );
+        }
+
+        if (identifier !== "") {
+            const numericIdentifier = Number(identifier);
+            const hasNumericIdentifier = Number.isInteger(numericIdentifier) && numericIdentifier > 0;
+            const normalizedIdentifierPhone = normalizePhoneNumber(identifier);
+            const hasValidIdentifierPhone = isValidPhoneNumber(normalizedIdentifierPhone);
+
+            let customer = null;
+
+            if (hasNumericIdentifier) {
+                customer = await Customer.findOne({ customerId: numericIdentifier });
+            }
+
+            if (!customer) {
+                customer = await Customer.findOne({
+                    contact: hasValidIdentifierPhone ? normalizedIdentifierPhone : identifier,
+                });
+            }
+
+            return NextResponse.json({
+                success: true,
+                customers: customer ? [serializeCustomer(customer)] : [],
+            });
         }
 
         const query = hasExactCustomerId
@@ -154,7 +217,7 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.json().catch(() => null);
         const name = String(body?.name ?? "").trim();
-        const contact = String(body?.contact ?? "").trim();
+        const contact = normalizePhoneNumber(String(body?.contact ?? ""));
         const address = String(body?.address ?? "").trim();
         const loanAmount = toNumber(body?.loanAmount);
         const interestRate = toNumber(body?.interestRate);
@@ -163,6 +226,16 @@ export async function POST(request: NextRequest) {
         if (!name || !contact || !address) {
             return NextResponse.json(
                 { success: false, message: "Name, contact, and address are required" },
+                { status: 400 }
+            );
+        }
+
+        if (!isValidPhoneNumber(contact)) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Phone number must start with 0 and contain exactly 10 digits",
+                },
                 { status: 400 }
             );
         }
@@ -209,6 +282,22 @@ export async function POST(request: NextRequest) {
             { status: 201 }
         );
     } catch (error) {
+        const duplicateField = getDuplicateField(error);
+
+        if (duplicateField === "customerId") {
+            return NextResponse.json(
+                { success: false, message: "Customer ID already exists" },
+                { status: 409 }
+            );
+        }
+
+        if (duplicateField === "contact") {
+            return NextResponse.json(
+                { success: false, message: "Customer phone number already exists" },
+                { status: 409 }
+            );
+        }
+
         console.error("Failed to create customer:", error);
 
         return NextResponse.json(

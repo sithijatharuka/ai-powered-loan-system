@@ -48,8 +48,12 @@ export default function AddCustomerDialog({
   }
 
   function isValidPhoneNumber(value: string) {
-    const normalized = value.trim().replace(/[\s()-]/g, "");
-    return /^(?:0[0-9]{9}|\+94[0-9]{9})$/.test(normalized);
+    const normalized = value.trim().replace(/\D/g, "");
+    return /^0\d{9}$/.test(normalized);
+  }
+
+  function normalizePhoneNumber(value: string) {
+    return value.trim().replace(/\D/g, "");
   }
 
   async function loadNextCustomerId() {
@@ -94,10 +98,12 @@ export default function AddCustomerDialog({
   const dailyPayment = duration > 0 ? totalWithInterest / (duration * 30) : 0;
 
   async function handleSubmit() {
-    const contactValue = formData.contact.trim();
+    const contactValue = normalizePhoneNumber(formData.contact);
 
     if (!isValidPhoneNumber(contactValue)) {
-      setContactError("Invalid Sri Lankan phone number");
+      setContactError(
+        "Phone number must start with 0 and contain exactly 10 digits",
+      );
       return;
     }
 
@@ -196,7 +202,7 @@ export default function AddCustomerDialog({
             <Input
               type="tel"
               inputMode="tel"
-              placeholder="Enter phone number"
+              placeholder="Ex: 0764050277"
               name="contact"
               value={formData.contact}
               onChange={handleChange}

@@ -194,7 +194,15 @@ export default function Loans() {
             ) : loans.length > 0 ? (
               loans
                 .sort((a, b) => {
-                  return a.id - b.id;
+                  const aTs = new Date(
+                    a.openedAt ?? a.createdAt ?? 0,
+                  ).getTime();
+                  const bTs = new Date(
+                    b.openedAt ?? b.createdAt ?? 0,
+                  ).getTime();
+
+                  // newest first
+                  return bTs - aTs;
                 })
                 .map((loan, index) => {
                   const displayLoanId = formatLoanId(index + 1);

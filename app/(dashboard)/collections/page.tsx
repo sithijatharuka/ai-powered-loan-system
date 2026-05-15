@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -27,15 +27,24 @@ export default function Collections() {
   const [search, setSearch] = useState("");
   const [amount, setAmount] = useState("");
   const [customers, setCustomers] = useState<Array<any>>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [dateFilter, setDateFilter] = useState("all");
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
 
-  async function loadCustomers(searchTerm = search) {
+  async function loadCustomers(
+    searchTerm = search,
+    fetchOnlyWithTransactions = false,
+  ) {
     setLoading(true);
 
     try {
+      // Do not fetch all customers by default (avoid listing everyone).
+      if (!searchTerm && !fetchOnlyWithTransactions) {
+        setCustomers([]);
+        return;
+      }
+
       const response = await fetch(
         `/api/customers${searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : ""}`,
       );
@@ -46,14 +55,26 @@ export default function Collections() {
         return;
       }
 
-      setCustomers(data.customers ?? []);
+      let fetched = data.customers ?? [];
+
+      if (fetchOnlyWithTransactions || !searchTerm) {
+        fetched = fetched.filter(
+          (c: any) =>
+            Array.isArray(c.transactions) && c.transactions.length > 0,
+        );
+      }
+
+      setCustomers(fetched);
     } finally {
       setLoading(false);
     }
   }
 
+  // Load customers who have transactions on mount so collection records
+  // with payments are always shown in the table by default.
   useEffect(() => {
-    void loadCustomers();
+    void loadCustomers("", true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function toLocalDateKey(value: string | Date | number | null | undefined) {
@@ -174,7 +195,7 @@ export default function Collections() {
 
     if (response.ok) {
       setAmount("");
-      void loadCustomers();
+      void loadCustomers(search, true);
     }
   }
 
@@ -207,16 +228,19 @@ export default function Collections() {
     return `C${String(numericId).padStart(2, "0")}`;
   };
 
-  async function searchCustomerById() {
-    const customerId = Number(dialogSearchId.trim());
-    if (!Number.isInteger(customerId) || customerId <= 0) {
+  async function searchCustomerByIdOrPhone() {
+    const identifier = dialogSearchId.trim();
+
+    if (!identifier) {
       setDialogCustomer(null);
       return;
     }
 
     setDialogLoading(true);
     try {
-      const resp = await fetch(`/api/customers?customerId=${customerId}`);
+      const resp = await fetch(
+        `/api/customers?identifier=${encodeURIComponent(identifier)}`,
+      );
       const data = await resp.json();
       if (!resp.ok || !data.success) {
         setDialogCustomer(null);
@@ -259,7 +283,7 @@ export default function Collections() {
         setDialogSearchId("");
         setDialogDate(new Date().toISOString().slice(0, 10));
         setAddPaymentDialogOpen(false);
-        void loadCustomers();
+        void loadCustomers(search, true);
       }
     } finally {
       setDialogSubmitLoading(false);
@@ -316,7 +340,7 @@ export default function Collections() {
         setEditAmount("");
         setEditDate(new Date().toISOString().slice(0, 10));
         setEditTransactionIndex(-1);
-        void loadCustomers();
+        void loadCustomers(search, true);
       }
     } finally {
       setEditLoading(false);
@@ -408,13 +432,13 @@ export default function Collections() {
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row gap-2">
                   <Input
-                    placeholder="Enter customer ID"
+                    placeholder="Enter customer ID or phone"
                     value={dialogSearchId}
                     onChange={(e) => setDialogSearchId(e.target.value)}
                     className="flex-1 text-xs sm:text-sm h-9 sm:h-10"
                   />
                   <Button
-                    onClick={searchCustomerById}
+                    onClick={searchCustomerByIdOrPhone}
                     disabled={dialogLoading}
                     className="text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto"
                   >
@@ -552,7 +576,7 @@ export default function Collections() {
                 Name
               </TableHead>
               <TableHead className="text-xs sm:text-sm whitespace-nowrap hidden sm:table-cell">
-                Today's Pmt
+                Total Collected
               </TableHead>
               <TableHead className="text-xs sm:text-sm whitespace-nowrap hidden lg:table-cell">
                 Date
@@ -580,24 +604,15 @@ export default function Collections() {
               filtered
                 .sort((a, b) => a.id - b.id)
                 .map((c) => {
-                  const today = new Date();
-                  const todayDateString =
-                    today.getFullYear() +
-                    "-" +
-                    String(today.getMonth() + 1).padStart(2, "0") +
-                    "-" +
-                    String(today.getDate()).padStart(2, "0");
-
-                  const todayTransactions = Array.isArray(c.transactions)
-                    ? c.transactions.filter((t: any) => {
-                        const transactionDate = toLocalDateKey(t.date);
-                        return transactionDate === todayDateString;
-                      })
-                    : [];
-
-                  const todayPaymentAmount = todayTransactions.reduce(
-                    (sum: number, t: any) => sum + Number(t.amount || 0),
-                    0,
+                  const totalCollected = Number(
+                    c.paidAmount ??
+                      (Array.isArray(c.transactions)
+                        ? c.transactions.reduce(
+                            (sum: number, t: any) =>
+                              sum + Number(t.amount || 0),
+                            0,
+                          )
+                        : 0),
                   );
 
                   const latestTransaction =
@@ -609,7 +624,11 @@ export default function Collections() {
                     ? toLocalDateKey(latestTransaction.date)
                     : "-";
 
-                  return (
+                  const completedLoans = Array.isArray(c.loanHistory)
+                    ? c.loanHistory.filter((l: any) => l.status === "completed")
+                    : [];
+
+                  const mainRow = (
                     <TableRow key={c.id}>
                       <TableCell className="text-xs sm:text-sm">
                         {formatCollectionId(c.id)}
@@ -620,7 +639,7 @@ export default function Collections() {
                       </TableCell>
 
                       <TableCell className="text-xs sm:text-sm hidden sm:table-cell">
-                        Rs. {todayPaymentAmount.toLocaleString()}
+                        Rs. {totalCollected.toLocaleString()}
                       </TableCell>
 
                       <TableCell className="text-xs sm:text-sm hidden lg:table-cell">
@@ -654,6 +673,40 @@ export default function Collections() {
                       </TableCell>
                     </TableRow>
                   );
+
+                  if (!completedLoans || completedLoans.length === 0) {
+                    return mainRow;
+                  }
+
+                  const loansRow = (
+                    <TableRow key={`${c.id}-loans`}>
+                      <TableCell colSpan={6} className="bg-zinc-50">
+                        <div className="text-xs sm:text-sm">
+                          <div className="font-medium mb-1">Previous Loans</div>
+                          <div className="flex flex-col gap-2">
+                            {completedLoans.map((l: any, idx: number) => (
+                              <div
+                                key={idx}
+                                className="rounded-md border p-2 bg-white text-zinc-700"
+                              >
+                                Loan Amount: Rs.{" "}
+                                {Number(l.loanAmount || 0).toLocaleString()} —
+                                Total: Rs.{" "}
+                                {Number(
+                                  l.totalWithInterest || 0,
+                                ).toLocaleString()}{" "}
+                                — Paid: Rs.{" "}
+                                {Number(l.paidAmount || 0).toLocaleString()} —
+                                Closed: {toLocalDateKey(l.closedAt) || "-"}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+
+                  return [mainRow, loansRow];
                 })
             )}
           </TableBody>

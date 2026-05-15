@@ -14,6 +14,7 @@ type ProfitRow = {
     interestRate: number;
     profit: number;
     date: string;
+    loanStatus?: "ongoing" | "completed";
 };
 
 function parseDateFromYmd(value: string) {
@@ -104,9 +105,21 @@ export async function GET(request: NextRequest) {
         const customers = await Customer.find({}).lean();
         const rows: ProfitRow[] = [];
         let totalProfit = 0;
+        let totalProfitOngoing = 0;
+        let totalProfitCompleted = 0;
+        let totalPaymentsOngoing = 0;
+        let totalPaymentsCompleted = 0;
 
         for (const customer of customers) {
             const interestRate = Number(customer.interestRate || 0);
+
+            // include current loan transactions
+            const remainingCurrent = Math.max(
+                Number(customer.totalWithInterest || 0) - Number(customer.paidAmount || 0),
+                0,
+            );
+
+            const currentStatus: "ongoing" | "completed" = remainingCurrent > 0 ? "ongoing" : "completed";
 
             for (const transaction of customer.transactions ?? []) {
                 const amount = Number(transaction.amount || 0);
@@ -131,9 +144,58 @@ export async function GET(request: NextRequest) {
                     interestRate,
                     profit,
                     date: date.toISOString(),
+                    loanStatus: currentStatus,
                 });
 
                 totalProfit += profit;
+                if (currentStatus === "ongoing") {
+                    totalProfitOngoing += profit;
+                    totalPaymentsOngoing += amount;
+                } else {
+                    totalProfitCompleted += profit;
+                    totalPaymentsCompleted += amount;
+                }
+            }
+
+            // include historical loans from loanHistory (completed or older loans)
+            for (const loan of customer.loanHistory ?? []) {
+                const loanStatus: "ongoing" | "completed" = (loan.status as any) === "ongoing" ? "ongoing" : "completed";
+
+                for (const transaction of loan.transactions ?? []) {
+                    const amount = Number(transaction.amount || 0);
+                    const date = new Date(transaction.date);
+
+                    if (!Number.isFinite(amount) || amount <= 0 || Number.isNaN(date.getTime())) {
+                        continue;
+                    }
+
+                    if (date < dateRange.start || date > dateRange.end) {
+                        continue;
+                    }
+
+                    const profit = interestRate > 0
+                        ? (amount / (100 + interestRate)) * interestRate
+                        : 0;
+
+                    rows.push({
+                        customerId: Number(customer.customerId ?? 0),
+                        customerName: String(customer.name ?? "Unknown"),
+                        paymentAmount: amount,
+                        interestRate,
+                        profit,
+                        date: date.toISOString(),
+                        loanStatus,
+                    });
+
+                    totalProfit += profit;
+                    if (loanStatus === "ongoing") {
+                        totalProfitOngoing += profit;
+                        totalPaymentsOngoing += amount;
+                    } else {
+                        totalProfitCompleted += profit;
+                        totalPaymentsCompleted += amount;
+                    }
+                }
             }
         }
 
@@ -149,7 +211,11 @@ export async function GET(request: NextRequest) {
                 endDate: dateRange.end.toISOString(),
                 rows,
                 totalProfit,
+                totalProfitOngoing,
+                totalProfitCompleted,
                 totalPayments,
+                totalPaymentsOngoing,
+                totalPaymentsCompleted,
             },
         });
     } catch (error) {
