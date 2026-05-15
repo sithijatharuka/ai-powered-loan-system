@@ -35,6 +35,8 @@ type ProfitApiResponse = {
   rows: ProfitRow[];
   totalProfit: number;
   totalPayments: number;
+  totalProfitOngoing?: number;
+  totalProfitCompleted?: number;
 };
 
 function toDateInputValue(date: Date) {
@@ -200,14 +202,36 @@ export default function Profits() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Total Profit ({filterLabel})</CardTitle>
-          </CardHeader>
-          <CardContent className="text-xl font-bold text-blue-600">
-            {formatCurrency(data.totalProfit)}
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 gap-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Total Profit ({filterLabel})</CardTitle>
+            </CardHeader>
+            <CardContent className="text-xl font-bold text-blue-600">
+              {formatCurrency(data.totalProfit)}
+            </CardContent>
+          </Card>
+
+          <div className="flex gap-2">
+            <Card className="flex-1">
+              <CardHeader>
+                <CardTitle>Profit — Ongoing</CardTitle>
+              </CardHeader>
+              <CardContent className="text-lg font-bold text-orange-600">
+                {formatCurrency(data.totalProfitOngoing ?? 0)}
+              </CardContent>
+            </Card>
+
+            <Card className="flex-1">
+              <CardHeader>
+                <CardTitle>Profit — Completed</CardTitle>
+              </CardHeader>
+              <CardContent className="text-lg font-bold text-green-600">
+                {formatCurrency(data.totalProfitCompleted ?? 0)}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
 
       <Card>
