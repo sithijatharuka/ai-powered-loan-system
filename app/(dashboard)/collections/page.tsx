@@ -207,16 +207,19 @@ export default function Collections() {
     return `C${String(numericId).padStart(2, "0")}`;
   };
 
-  async function searchCustomerById() {
-    const customerId = Number(dialogSearchId.trim());
-    if (!Number.isInteger(customerId) || customerId <= 0) {
+  async function searchCustomerByIdOrPhone() {
+    const identifier = dialogSearchId.trim();
+
+    if (!identifier) {
       setDialogCustomer(null);
       return;
     }
 
     setDialogLoading(true);
     try {
-      const resp = await fetch(`/api/customers?customerId=${customerId}`);
+      const resp = await fetch(
+        `/api/customers?identifier=${encodeURIComponent(identifier)}`,
+      );
       const data = await resp.json();
       if (!resp.ok || !data.success) {
         setDialogCustomer(null);
@@ -408,13 +411,13 @@ export default function Collections() {
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row gap-2">
                   <Input
-                    placeholder="Enter customer ID"
+                    placeholder="Enter customer ID or phone"
                     value={dialogSearchId}
                     onChange={(e) => setDialogSearchId(e.target.value)}
                     className="flex-1 text-xs sm:text-sm h-9 sm:h-10"
                   />
                   <Button
-                    onClick={searchCustomerById}
+                    onClick={searchCustomerByIdOrPhone}
                     disabled={dialogLoading}
                     className="text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto"
                   >

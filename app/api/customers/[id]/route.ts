@@ -10,6 +10,32 @@ function toNumber(value: unknown) {
     return Number.isFinite(number) ? number : NaN;
 }
 
+function normalizePhoneNumber(value: string) {
+    return value.trim().replace(/\D/g, "");
+}
+
+function isValidPhoneNumber(value: string) {
+    return /^0\d{9}$/.test(value);
+}
+
+function getDuplicateField(error: unknown) {
+    const duplicateError = error as {
+        code?: number;
+        keyPattern?: Record<string, number>;
+        message?: string;
+    };
+
+    if (duplicateError?.code !== 11000) {
+        return null;
+    }
+
+    if (duplicateError.keyPattern?.contact || duplicateError.message?.includes("contact")) {
+        return "contact";
+    }
+
+    return "unknown";
+}
+
 function serializeCustomer(customer: {
     customerId?: number;
     _id: { toString(): string };
@@ -149,6 +175,23 @@ export async function PUT(
         }
 
         const body = await request.json().catch(() => null);
+        const hasContactField =
+            body !== null &&
+            typeof body === "object" &&
+            Object.prototype.hasOwnProperty.call(body, "contact");
+        const normalizedContact = hasContactField
+            ? normalizePhoneNumber(String(body?.contact ?? ""))
+            : undefined;
+
+        if (hasContactField && !isValidPhoneNumber(normalizedContact as string)) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Phone number must start with 0 and contain exactly 10 digits",
+                },
+                { status: 400 }
+            );
+        }
 
         await connectToDb();
 
@@ -215,7 +258,7 @@ export async function PUT(
                 { customerId },
                 {
                     name: body?.name ?? existingCustomer.name,
-                    contact: body?.contact ?? existingCustomer.contact,
+                    contact: normalizedContact ?? existingCustomer.contact,
                     address: body?.address ?? existingCustomer.address,
                     loanAmount,
                     interestRate,
@@ -239,7 +282,7 @@ export async function PUT(
 
         const update = {
             name: body?.name,
-            contact: body?.contact,
+            contact: normalizedContact,
             address: body?.address,
             loanAmount: Number.isFinite(Number(body?.loanAmount)) ? Number(body.loanAmount) : undefined,
             interestRate: Number.isFinite(Number(body?.interestRate)) ? Number(body.interestRate) : undefined,
@@ -267,6 +310,15 @@ export async function PUT(
             customer: serializeCustomer(customer),
         });
     } catch (error) {
+        const duplicateField = getDuplicateField(error);
+
+        if (duplicateField === "contact") {
+            return NextResponse.json(
+                { success: false, message: "Customer phone number already exists" },
+                { status: 409 }
+            );
+        }
+
         console.error("Failed to update customer:", error);
 
         return NextResponse.json(
