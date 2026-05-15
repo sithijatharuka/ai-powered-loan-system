@@ -624,7 +624,11 @@ export default function Collections() {
                     ? toLocalDateKey(latestTransaction.date)
                     : "-";
 
-                  return (
+                  const completedLoans = Array.isArray(c.loanHistory)
+                    ? c.loanHistory.filter((l: any) => l.status === "completed")
+                    : [];
+
+                  const mainRow = (
                     <TableRow key={c.id}>
                       <TableCell className="text-xs sm:text-sm">
                         {formatCollectionId(c.id)}
@@ -669,6 +673,32 @@ export default function Collections() {
                       </TableCell>
                     </TableRow>
                   );
+
+                  if (!completedLoans || completedLoans.length === 0) {
+                    return mainRow;
+                  }
+
+                  const loansRow = (
+                    <TableRow key={`${c.id}-loans`}>
+                      <TableCell colSpan={6} className="bg-zinc-50">
+                        <div className="text-xs sm:text-sm">
+                          <div className="font-medium mb-1">Previous Loans</div>
+                          <div className="flex flex-col gap-2">
+                            {completedLoans.map((l: any, idx: number) => (
+                              <div
+                                key={idx}
+                                className="rounded-md border p-2 bg-white text-zinc-700"
+                              >
+                                Loan Amount: Rs. {Number(l.loanAmount || 0).toLocaleString()} — Total: Rs. {Number(l.totalWithInterest || 0).toLocaleString()} — Paid: Rs. {Number(l.paidAmount || 0).toLocaleString()} — Closed: {toLocalDateKey(l.closedAt) || "-"}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+
+                  return [mainRow, loansRow];
                 })
             )}
           </TableBody>
