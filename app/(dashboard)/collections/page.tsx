@@ -689,7 +689,15 @@ export default function Collections() {
                                 key={idx}
                                 className="rounded-md border p-2 bg-white text-zinc-700"
                               >
-                                Loan Amount: Rs. {Number(l.loanAmount || 0).toLocaleString()} — Total: Rs. {Number(l.totalWithInterest || 0).toLocaleString()} — Paid: Rs. {Number(l.paidAmount || 0).toLocaleString()} — Closed: {toLocalDateKey(l.closedAt) || "-"}
+                                Loan Amount: Rs.{" "}
+                                {Number(l.loanAmount || 0).toLocaleString()} —
+                                Total: Rs.{" "}
+                                {Number(
+                                  l.totalWithInterest || 0,
+                                ).toLocaleString()}{" "}
+                                — Paid: Rs.{" "}
+                                {Number(l.paidAmount || 0).toLocaleString()} —
+                                Closed: {toLocalDateKey(l.closedAt) || "-"}
                               </div>
                             ))}
                           </div>
