@@ -21,6 +21,9 @@ type DashboardSummary = {
   profitFromLoanInterest: number;
   monthlyProfit?: number;
   monthName?: string;
+  monthlyCollected?: number;
+  monthlyLoanGiven?: number;
+  totalCustomers?: number;
   recentTransactions: Array<{
     customerId: number;
     customerName: string;
@@ -64,9 +67,12 @@ export default function Dashboard() {
   const activeCustomers = summary?.activeCustomers ?? 0;
   const profitFromLoanInterest = summary?.profitFromLoanInterest ?? 0;
   const monthlyProfit = summary?.monthlyProfit ?? 0;
+  const monthlyCollected = summary?.monthlyCollected ?? 0;
+  const monthlyLoanGiven = summary?.monthlyLoanGiven ?? 0;
+  const totalCustomers = summary?.totalCustomers ?? 0;
   const monthName =
     summary?.monthName ??
-    new Date().toLocaleString(undefined, { month: "long", year: "numeric" });
+    new Date().toLocaleString(undefined, { month: "long" });
   const recentTransactions = [...(summary?.recentTransactions ?? [])].sort(
     (a, b) => a.customerId - b.customerId,
   );
@@ -85,34 +91,36 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>Total Loan Amount Given</CardTitle>
+            <CardTitle>Total loan amount given — {monthName}</CardTitle>
           </CardHeader>
           <CardContent className="text-xl font-bold">
-            Rs. {totalLoanGiven.toLocaleString()}
+            {formatCurrency(monthlyLoanGiven)}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Total Collected</CardTitle>
+            <CardTitle>Monthly profit — {monthName}</CardTitle>
+          </CardHeader>
+          <CardContent className="text-xl font-bold text-indigo-600">
+            {formatCurrency(monthlyProfit)}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Total amount collected from customers — {monthName}
+            </CardTitle>
           </CardHeader>
           <CardContent className="text-xl font-bold text-green-600">
-            Rs. {totalCollected.toLocaleString()}
+            {formatCurrency(monthlyCollected)}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Pending Loan</CardTitle>
-          </CardHeader>
-          <CardContent className="text-xl font-bold text-red-600">
-            Rs. {pendingLoan.toLocaleString()}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Active Customers</CardTitle>
+            <CardTitle>Active customers</CardTitle>
           </CardHeader>
           <CardContent className="text-xl font-bold">
             {loading ? "Loading..." : activeCustomers}
@@ -121,10 +129,37 @@ export default function Dashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Monthly Profit — {monthName}</CardTitle>
+            <CardTitle>Total loan amount given (all months)</CardTitle>
+          </CardHeader>
+          <CardContent className="text-xl font-bold">
+            {formatCurrency(totalLoanGiven)}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Total profit (all months)</CardTitle>
           </CardHeader>
           <CardContent className="text-xl font-bold text-indigo-600">
-            {formatCurrency(monthlyProfit)}
+            {formatCurrency(profitFromLoanInterest)}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Pending loans</CardTitle>
+          </CardHeader>
+          <CardContent className="text-xl font-bold text-red-600">
+            {formatCurrency(pendingLoan)}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Total customers</CardTitle>
+          </CardHeader>
+          <CardContent className="text-xl font-bold">
+            {loading ? "Loading..." : totalCustomers}
           </CardContent>
         </Card>
       </div>
