@@ -319,7 +319,11 @@ export default function Collections() {
       ? customer.transactions
       : [];
 
-    if (transactions.length === 0 || txIndex < 0 || txIndex >= transactions.length) {
+    if (
+      transactions.length === 0 ||
+      txIndex < 0 ||
+      txIndex >= transactions.length
+    ) {
       return;
     }
 
@@ -327,7 +331,11 @@ export default function Collections() {
     setEditingCustomer(customer);
     setEditTransactionIndex(txIndex);
     setEditAmount(String(tx.amount ?? ""));
-    setEditDate(tx.date ? new Date(tx.date).toISOString().slice(0, 10) : new Date().toISOString().slice(0, 10));
+    setEditDate(
+      tx.date
+        ? new Date(tx.date).toISOString().slice(0, 10)
+        : new Date().toISOString().slice(0, 10),
+    );
     setEditDialogOpen(true);
   }
 
@@ -587,16 +595,16 @@ export default function Collections() {
         <Table>
           <TableHeader className="bg-zinc-50">
             <TableRow>
-              <TableHead className="text-xs sm:text-sm whitespace-nowrap">
+              <TableHead className="hidden sm:table-cell text-xs sm:text-sm whitespace-nowrap">
                 Collection ID
               </TableHead>
               <TableHead className="text-xs sm:text-sm whitespace-nowrap">
                 Name
               </TableHead>
-              <TableHead className="text-xs sm:text-sm whitespace-nowrap hidden sm:table-cell">
+              <TableHead className="text-xs sm:text-sm whitespace-nowrap">
                 Total Collected
               </TableHead>
-              <TableHead className="text-xs sm:text-sm whitespace-nowrap hidden lg:table-cell">
+              <TableHead className="text-xs sm:text-sm whitespace-nowrap">
                 Date
               </TableHead>
               <TableHead className="text-xs sm:text-sm whitespace-nowrap hidden sm:table-cell">
@@ -647,7 +655,8 @@ export default function Collections() {
                       );
 
                       const latestTransaction =
-                        Array.isArray(c.transactions) && c.transactions.length > 0
+                        Array.isArray(c.transactions) &&
+                        c.transactions.length > 0
                           ? c.transactions[c.transactions.length - 1]
                           : null;
 
@@ -657,30 +666,34 @@ export default function Collections() {
 
                       return (
                         <TableRow key={c.id}>
-                          <TableCell className="text-xs sm:text-sm">
-                            {formatCollectionId(c.id)}
-                          </TableCell>
+                          <TableCell className="hidden sm:table-cell text-xs sm:text-sm">
+                              {formatCollectionId(c.id)}
+                            </TableCell>
 
                           <TableCell className="font-medium text-xs sm:text-sm">
                             {c.name}
                           </TableCell>
 
-                          <TableCell className="text-xs sm:text-sm hidden sm:table-cell">
+                          <TableCell className="text-xs sm:text-sm">
                             Rs. {totalCollected.toLocaleString()}
                           </TableCell>
 
-                          <TableCell className="text-xs sm:text-sm hidden lg:table-cell">
+                          <TableCell className="text-xs sm:text-sm">
                             {latestDate}
                           </TableCell>
 
                           <TableCell className="text-xs sm:text-sm hidden sm:table-cell">
                             <Badge
                               variant={
-                                c.status === "completed" ? "default" : "destructive"
+                                c.status === "completed"
+                                  ? "default"
+                                  : "destructive"
                               }
                               className="text-xs"
                             >
-                              {c.status === "completed" ? "Completed" : "Ongoing"}
+                              {c.status === "completed"
+                                ? "Completed"
+                                : "Ongoing"}
                             </Badge>
                           </TableCell>
 
@@ -719,7 +732,7 @@ export default function Collections() {
 
                   return (
                     <TableRow key={`${c.id}-${originalIndex}-${displayIdx}`}>
-                      <TableCell className="text-xs sm:text-sm">
+                      <TableCell className="hidden sm:table-cell text-xs sm:text-sm">
                         {formatCollectionId(c.id)}
                       </TableCell>
 
@@ -727,11 +740,11 @@ export default function Collections() {
                         {c.name}
                       </TableCell>
 
-                      <TableCell className="text-xs sm:text-sm hidden sm:table-cell">
+                      <TableCell className="text-xs sm:text-sm">
                         Rs. {txAmount.toLocaleString()}
                       </TableCell>
 
-                      <TableCell className="text-xs sm:text-sm hidden lg:table-cell">
+                      <TableCell className="text-xs sm:text-sm">
                         {txDate}
                       </TableCell>
 
@@ -750,7 +763,9 @@ export default function Collections() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => openEditDialogForIndex(c, originalIndex)}
+                          onClick={() =>
+                            openEditDialogForIndex(c, originalIndex)
+                          }
                           className="text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
                         >
                           Edit
