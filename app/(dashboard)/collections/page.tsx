@@ -667,8 +667,8 @@ export default function Collections() {
                       return (
                         <TableRow key={c.id}>
                           <TableCell className="hidden sm:table-cell text-xs sm:text-sm">
-                              {formatCollectionId(c.id)}
-                            </TableCell>
+                            {formatCollectionId(c.id)}
+                          </TableCell>
 
                           <TableCell className="font-medium text-xs sm:text-sm">
                             {c.name}
