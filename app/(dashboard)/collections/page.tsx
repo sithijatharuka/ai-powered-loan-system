@@ -313,6 +313,32 @@ export default function Collections() {
     setEditDialogOpen(true);
   }
 
+  // Open edit dialog for a specific transaction index
+  function openEditDialogForIndex(customer: any, txIndex: number) {
+    const transactions = Array.isArray(customer.transactions)
+      ? customer.transactions
+      : [];
+
+    if (
+      transactions.length === 0 ||
+      txIndex < 0 ||
+      txIndex >= transactions.length
+    ) {
+      return;
+    }
+
+    const tx = transactions[txIndex];
+    setEditingCustomer(customer);
+    setEditTransactionIndex(txIndex);
+    setEditAmount(String(tx.amount ?? ""));
+    setEditDate(
+      tx.date
+        ? new Date(tx.date).toISOString().slice(0, 10)
+        : new Date().toISOString().slice(0, 10),
+    );
+    setEditDialogOpen(true);
+  }
+
   async function submitEditPayment() {
     if (!editingCustomer) return;
 
@@ -569,16 +595,16 @@ export default function Collections() {
         <Table>
           <TableHeader className="bg-zinc-50">
             <TableRow>
-              <TableHead className="text-xs sm:text-sm whitespace-nowrap">
+              <TableHead className="hidden sm:table-cell text-xs sm:text-sm whitespace-nowrap">
                 Collection ID
               </TableHead>
               <TableHead className="text-xs sm:text-sm whitespace-nowrap">
                 Name
               </TableHead>
-              <TableHead className="text-xs sm:text-sm whitespace-nowrap hidden sm:table-cell">
+              <TableHead className="text-xs sm:text-sm whitespace-nowrap">
                 Total Collected
               </TableHead>
-              <TableHead className="text-xs sm:text-sm whitespace-nowrap hidden lg:table-cell">
+              <TableHead className="text-xs sm:text-sm whitespace-nowrap">
                 Date
               </TableHead>
               <TableHead className="text-xs sm:text-sm whitespace-nowrap hidden sm:table-cell">
@@ -601,36 +627,112 @@ export default function Collections() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered
-                .sort((a, b) => a.id - b.id)
-                .map((c) => {
-                  const totalCollected = Number(
-                    c.paidAmount ??
-                      (Array.isArray(c.transactions)
-                        ? c.transactions.reduce(
-                            (sum: number, t: any) =>
-                              sum + Number(t.amount || 0),
-                            0,
-                          )
-                        : 0),
-                  );
-
-                  const latestTransaction =
-                    Array.isArray(c.transactions) && c.transactions.length > 0
-                      ? c.transactions[c.transactions.length - 1]
-                      : null;
-
-                  const latestDate = latestTransaction
-                    ? toLocalDateKey(latestTransaction.date)
-                    : "-";
-
-                  const completedLoans = Array.isArray(c.loanHistory)
-                    ? c.loanHistory.filter((l: any) => l.status === "completed")
+              (() => {
+                // Flatten all transactions across filtered customers into a single list
+                const entries: Array<any> = [];
+                filtered.forEach((cust) => {
+                  const transactions = Array.isArray(cust.transactions)
+                    ? cust.transactions
                     : [];
+                  transactions.forEach((t: any, idx: number) => {
+                    entries.push({ customer: cust, tx: t, txIndex: idx });
+                  });
+                });
 
-                  const mainRow = (
-                    <TableRow key={c.id}>
-                      <TableCell className="text-xs sm:text-sm">
+                if (entries.length === 0) {
+                  return filtered
+                    .sort((a, b) => a.id - b.id)
+                    .map((c) => {
+                      const totalCollected = Number(
+                        c.paidAmount ??
+                          (Array.isArray(c.transactions)
+                            ? c.transactions.reduce(
+                                (sum: number, t: any) =>
+                                  sum + Number(t.amount || 0),
+                                0,
+                              )
+                            : 0),
+                      );
+
+                      const latestTransaction =
+                        Array.isArray(c.transactions) &&
+                        c.transactions.length > 0
+                          ? c.transactions[c.transactions.length - 1]
+                          : null;
+
+                      const latestDate = latestTransaction
+                        ? toLocalDateKey(latestTransaction.date)
+                        : "-";
+
+                      return (
+                        <TableRow key={c.id}>
+                          <TableCell className="hidden sm:table-cell text-xs sm:text-sm">
+                            {formatCollectionId(c.id)}
+                          </TableCell>
+
+                          <TableCell className="font-medium text-xs sm:text-sm">
+                            {c.name}
+                          </TableCell>
+
+                          <TableCell className="text-xs sm:text-sm">
+                            Rs. {totalCollected.toLocaleString()}
+                          </TableCell>
+
+                          <TableCell className="text-xs sm:text-sm">
+                            {latestDate}
+                          </TableCell>
+
+                          <TableCell className="text-xs sm:text-sm hidden sm:table-cell">
+                            <Badge
+                              variant={
+                                c.status === "completed"
+                                  ? "default"
+                                  : "destructive"
+                              }
+                              className="text-xs"
+                            >
+                              {c.status === "completed"
+                                ? "Completed"
+                                : "Ongoing"}
+                            </Badge>
+                          </TableCell>
+
+                          <TableCell className="text-right">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openEditDialog(c)}
+                              disabled={
+                                !Array.isArray(c.transactions) ||
+                                c.transactions.length === 0
+                              }
+                              className="text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
+                            >
+                              Edit
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    });
+                }
+
+                // Sort entries by tx date ascending so latest payment appears at bottom
+                entries.sort((a, b) => {
+                  const ta = a.tx?.date ? new Date(a.tx.date).getTime() : 0;
+                  const tb = b.tx?.date ? new Date(b.tx.date).getTime() : 0;
+                  return ta - tb;
+                });
+
+                return entries.map((entry: any, displayIdx: number) => {
+                  const c = entry.customer;
+                  const t = entry.tx;
+                  const originalIndex = entry.txIndex;
+                  const txDate = t?.date ? toLocalDateKey(t.date) : "-";
+                  const txAmount = Number(t?.amount || 0);
+
+                  return (
+                    <TableRow key={`${c.id}-${originalIndex}-${displayIdx}`}>
+                      <TableCell className="hidden sm:table-cell text-xs sm:text-sm">
                         {formatCollectionId(c.id)}
                       </TableCell>
 
@@ -638,12 +740,12 @@ export default function Collections() {
                         {c.name}
                       </TableCell>
 
-                      <TableCell className="text-xs sm:text-sm hidden sm:table-cell">
-                        Rs. {totalCollected.toLocaleString()}
+                      <TableCell className="text-xs sm:text-sm">
+                        Rs. {txAmount.toLocaleString()}
                       </TableCell>
 
-                      <TableCell className="text-xs sm:text-sm hidden lg:table-cell">
-                        {latestDate}
+                      <TableCell className="text-xs sm:text-sm">
+                        {txDate}
                       </TableCell>
 
                       <TableCell className="text-xs sm:text-sm hidden sm:table-cell">
@@ -661,10 +763,8 @@ export default function Collections() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => openEditDialog(c)}
-                          disabled={
-                            !Array.isArray(c.transactions) ||
-                            c.transactions.length === 0
+                          onClick={() =>
+                            openEditDialogForIndex(c, originalIndex)
                           }
                           className="text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
                         >
@@ -673,41 +773,8 @@ export default function Collections() {
                       </TableCell>
                     </TableRow>
                   );
-
-                  if (!completedLoans || completedLoans.length === 0) {
-                    return mainRow;
-                  }
-
-                  const loansRow = (
-                    <TableRow key={`${c.id}-loans`}>
-                      <TableCell colSpan={6} className="bg-zinc-50">
-                        <div className="text-xs sm:text-sm">
-                          <div className="font-medium mb-1">Previous Loans</div>
-                          <div className="flex flex-col gap-2">
-                            {completedLoans.map((l: any, idx: number) => (
-                              <div
-                                key={idx}
-                                className="rounded-md border p-2 bg-white text-zinc-700"
-                              >
-                                Loan Amount: Rs.{" "}
-                                {Number(l.loanAmount || 0).toLocaleString()} —
-                                Total: Rs.{" "}
-                                {Number(
-                                  l.totalWithInterest || 0,
-                                ).toLocaleString()}{" "}
-                                — Paid: Rs.{" "}
-                                {Number(l.paidAmount || 0).toLocaleString()} —
-                                Closed: {toLocalDateKey(l.closedAt) || "-"}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-
-                  return [mainRow, loansRow];
-                })
+                });
+              })()
             )}
           </TableBody>
         </Table>

@@ -201,8 +201,8 @@ export default function Loans() {
                     b.openedAt ?? b.createdAt ?? 0,
                   ).getTime();
 
-                  // newest first
-                  return bTs - aTs;
+                  // oldest first so latest appears at the bottom
+                  return aTs - bTs;
                 })
                 .map((loan, index) => {
                   const displayLoanId = formatLoanId(index + 1);
