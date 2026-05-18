@@ -104,6 +104,41 @@ export default async function CustomerDetails({
 
   const formatCurrency = (value: number) => `Rs. ${value.toLocaleString()}`;
 
+  const transactionRecords = customer.transactions as CustomerTransaction[];
+
+  const getDateKey = (value: string | Date) => new Date(value).toDateString();
+
+  const dailyTransactionMap = transactionRecords.reduce<Record<string, number>>(
+    (accumulator, transaction) => {
+      const dateKey = getDateKey(transaction.date);
+      accumulator[dateKey] = (accumulator[dateKey] ?? 0) + Number(transaction.amount || 0);
+      return accumulator;
+    },
+    {},
+  );
+
+  const dailyLedgerRows: Array<{ date: Date; amount?: number }> = [];
+  const ledgerStartDate = new Date(customer.createdAt);
+  const ledgerEndDate = new Date();
+  ledgerStartDate.setHours(0, 0, 0, 0);
+  ledgerEndDate.setHours(0, 0, 0, 0);
+
+  for (
+    const currentDate = new Date(ledgerStartDate);
+    currentDate <= ledgerEndDate;
+    currentDate.setDate(currentDate.getDate() + 1)
+  ) {
+    const dateKey = currentDate.toDateString();
+    const amount = dailyTransactionMap[dateKey];
+
+    dailyLedgerRows.push({
+      date: new Date(currentDate),
+      amount: amount && amount > 0 ? amount : undefined,
+    });
+  }
+
+  dailyLedgerRows.reverse();
+
   function renderLoanCard(loan: LoanRecord, index: number) {
     const balance = Math.max(loan.totalWithInterest - loan.paidAmount, 0);
 
@@ -408,32 +443,42 @@ export default async function CustomerDetails({
                     Date
                   </TableHead>
                   <TableHead className="text-xs sm:text-sm whitespace-nowrap">
-                    Amount
+                    Payment
                   </TableHead>
                 </TableRow>
               </TableHeader>
 
               <TableBody>
-                {(customer.transactions as CustomerTransaction[]).length > 0 ? (
-                  (customer.transactions as CustomerTransaction[]).map(
-                    (t, i) => (
-                      <TableRow key={i}>
-                        <TableCell className="text-xs sm:text-sm">
-                          {new Date(t.date).toLocaleDateString()}
+                {dailyLedgerRows.length > 0 ? (
+                  dailyLedgerRows.map((entry) => {
+                    const dateKey = entry.date.toDateString();
+
+                    return (
+                      <TableRow key={dateKey}>
+                        <TableCell className="text-xs sm:text-sm font-medium">
+                          {entry.date.toLocaleDateString()}
                         </TableCell>
-                        <TableCell className="font-medium text-green-600 text-xs sm:text-sm">
-                          {formatCurrency(t.amount)}
+                        <TableCell
+                          className={
+                            entry.amount !== undefined
+                              ? "font-medium text-green-600 text-xs sm:text-sm"
+                              : "font-medium text-zinc-500 text-xs sm:text-sm"
+                          }
+                        >
+                          {entry.amount !== undefined
+                            ? formatCurrency(entry.amount)
+                            : "No payment done"}
                         </TableCell>
                       </TableRow>
-                    ),
-                  )
+                    );
+                  })
                 ) : (
                   <TableRow>
                     <TableCell
                       colSpan={2}
                       className="h-24 text-center text-zinc-500 text-xs sm:text-sm"
                     >
-                      No transactions yet.
+                      No payment records yet.
                     </TableCell>
                   </TableRow>
                 )}
