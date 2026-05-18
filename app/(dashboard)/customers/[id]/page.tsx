@@ -111,7 +111,8 @@ export default async function CustomerDetails({
   const dailyTransactionMap = transactionRecords.reduce<Record<string, number>>(
     (accumulator, transaction) => {
       const dateKey = getDateKey(transaction.date);
-      accumulator[dateKey] = (accumulator[dateKey] ?? 0) + Number(transaction.amount || 0);
+      accumulator[dateKey] =
+        (accumulator[dateKey] ?? 0) + Number(transaction.amount || 0);
       return accumulator;
     },
     {},
