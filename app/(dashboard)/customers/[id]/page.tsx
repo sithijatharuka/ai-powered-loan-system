@@ -29,12 +29,33 @@ type LoanRecord = {
   totalWithInterest: number;
   monthlyPayment: number;
   dailyPayment: number;
+  loanStartDate?: string | Date;
+  loanEndDate?: string | Date;
   paidAmount: number;
   transactions: CustomerTransaction[];
   status?: "ongoing" | "completed";
   openedAt?: string | Date;
   closedAt?: string | Date;
 };
+
+function addMonthsUtc(value: string | Date | undefined, months: number) {
+  if (!value) {
+    return undefined;
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return undefined;
+  }
+
+  const year = date.getUTCFullYear();
+  const month = date.getUTCMonth() + months;
+  const day = date.getUTCDate();
+  const lastDayOfTargetMonth = new Date(Date.UTC(year, month + 1, 0, 12, 0, 0, 0)).getUTCDate();
+
+  return new Date(Date.UTC(year, month, Math.min(day, lastDayOfTargetMonth), 12, 0, 0, 0));
+}
 
 export default async function CustomerDetails({
   params,
@@ -72,11 +93,17 @@ export default async function CustomerDetails({
     totalWithInterest,
     monthlyPayment: customer.monthlyPayment,
     dailyPayment: customer.dailyPayment,
+    loanStartDate: customer.loanStartDate ?? customer.openedAt ?? customer.createdAt,
+    loanEndDate:
+      customer.loanEndDate ??
+      customer.closedAt ??
+      addMonthsUtc(customer.loanStartDate ?? customer.openedAt ?? customer.createdAt, customer.duration),
     paidAmount: customer.paidAmount,
     transactions: customer.transactions as CustomerTransaction[],
     status: isLoanComplete ? "completed" : "ongoing",
-    openedAt: customer.createdAt,
-    closedAt: isLoanComplete ? customer.updatedAt : undefined,
+    openedAt: customer.loanStartDate ?? customer.openedAt ?? customer.createdAt,
+    closedAt:
+      (isLoanComplete ? customer.loanEndDate ?? customer.closedAt ?? customer.updatedAt : undefined),
   };
 
   const percentPaid =
@@ -90,10 +117,24 @@ export default async function CustomerDetails({
         )
       : 0;
 
-  // Calculate loan dates
-  const loanStartDate = new Date(customer.createdAt);
-  const loanFinishDate = new Date(loanStartDate);
-  loanFinishDate.setMonth(loanFinishDate.getMonth() + customer.duration);
+  const formatDateOnly = (value: string | Date | undefined) => {
+    if (!value) {
+      return "-";
+    }
+
+    const date = new Date(value);
+
+    return Number.isNaN(date.getTime())
+      ? "-"
+      : new Intl.DateTimeFormat("en-GB", { timeZone: "UTC" }).format(date);
+  };
+
+  const loanStartDate = new Date(
+    customer.loanStartDate ?? customer.openedAt ?? customer.createdAt,
+  );
+  const loanFinishDate = new Date(
+    customer.loanEndDate ?? customer.closedAt ?? addMonthsUtc(loanStartDate, customer.duration) ?? loanStartDate,
+  );
 
   const completedLoans = [
     ...((customer.loanHistory as LoanRecord[] | undefined) ?? []),
@@ -119,7 +160,9 @@ export default async function CustomerDetails({
   );
 
   const dailyLedgerRows: Array<{ date: Date; amount?: number }> = [];
-  const ledgerStartDate = new Date(customer.createdAt);
+  const ledgerStartDate = new Date(
+    customer.loanStartDate ?? customer.openedAt ?? customer.createdAt,
+  );
   const ledgerEndDate = new Date();
   ledgerStartDate.setHours(0, 0, 0, 0);
   ledgerEndDate.setHours(0, 0, 0, 0);
@@ -154,7 +197,7 @@ export default async function CustomerDetails({
               Rs. {loan.loanAmount.toLocaleString()}
             </p>
             <p className="text-xs sm:text-sm text-zinc-500">
-              {loan.interestRate}% interest · {loan.duration}mo
+                {loan.interestRate}% interest · {loan.duration}mo
             </p>
           </div>
 
@@ -192,6 +235,20 @@ export default async function CustomerDetails({
             <p className="text-zinc-500">Transactions</p>
             <p className="font-medium text-xs sm:text-sm">
               {loan.transactions.length}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-zinc-500">Start Date</p>
+            <p className="font-medium text-xs sm:text-sm">
+              {formatDateOnly(loan.loanStartDate ?? loan.openedAt)}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-zinc-500">End Date</p>
+            <p className="font-medium text-xs sm:text-sm">
+              {formatDateOnly(loan.loanEndDate ?? loan.closedAt)}
             </p>
           </div>
         </div>
@@ -348,7 +405,7 @@ export default async function CustomerDetails({
                   Loan Start Date
                 </p>
                 <p className="mt-1 text-base sm:text-xl font-semibold">
-                  {loanStartDate.toLocaleDateString()}
+                  {formatDateOnly(loanStartDate)}
                 </p>
               </div>
 
@@ -357,7 +414,7 @@ export default async function CustomerDetails({
                   Loan Finish Date
                 </p>
                 <p className="mt-1 text-base sm:text-xl font-semibold">
-                  {loanFinishDate.toLocaleDateString()}
+                  {formatDateOnly(loanFinishDate)}
                 </p>
               </div>
             </div>

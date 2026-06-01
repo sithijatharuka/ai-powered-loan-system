@@ -11,6 +11,25 @@ type PaymentTransaction = {
     note?: string;
 };
 
+function parsePaymentDate(value: unknown) {
+    if (typeof value !== "string" && typeof value !== "number") {
+        return new Date();
+    }
+
+    const date = new Date(value);
+
+    return Number.isNaN(date.getTime()) ? new Date() : date;
+}
+
+function addMonthsUtc(date: Date, months: number) {
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth() + months;
+    const day = date.getUTCDate();
+    const lastDayOfTargetMonth = new Date(Date.UTC(year, month + 1, 0, 12, 0, 0, 0)).getUTCDate();
+
+    return new Date(Date.UTC(year, month, Math.min(day, lastDayOfTargetMonth), 12, 0, 0, 0));
+}
+
 function getTransactionIndex(body: unknown, transactions: PaymentTransaction[]) {
     const index = Number((body as { transactionIndex?: unknown })?.transactionIndex);
 
@@ -65,22 +84,42 @@ export async function POST(
             );
         }
 
-        customer.paidAmount = Number(customer.paidAmount || 0) + amount;
-        customer.transactions.push({
+        const paymentDate = parsePaymentDate(body?.date);
+        const loanStartDate = customer.loanStartDate ?? customer.createdAt ?? paymentDate;
+        const loanEndDate = customer.loanEndDate ?? addMonthsUtc(loanStartDate, Number(customer.duration || 0));
+        const transaction = {
             amount,
-            date: body?.date ? new Date(body.date) : new Date(),
+            date: paymentDate,
             note: String(body?.note ?? "Payment received"),
-        });
+        };
 
-        await customer.save();
+        const updatedCustomer = await Customer.findOneAndUpdate(
+            { customerId },
+            {
+                $set: {
+                    loanStartDate,
+                    loanEndDate,
+                },
+                $inc: { paidAmount: amount },
+                $push: { transactions: transaction },
+            },
+            { returnDocument: "after" },
+        );
+
+        if (!updatedCustomer) {
+            return NextResponse.json(
+                { success: false, message: "Customer not found" },
+                { status: 404 }
+            );
+        }
 
         return NextResponse.json({
             success: true,
             message: "Payment recorded successfully",
             customer: {
-                id: customer.customerId,
-                paidAmount: customer.paidAmount,
-                transactions: customer.transactions,
+                id: updatedCustomer.customerId,
+                paidAmount: updatedCustomer.paidAmount,
+                transactions: updatedCustomer.transactions,
             },
         });
     } catch (error) {
@@ -148,25 +187,48 @@ export async function PUT(
         const existingTransaction = customer.transactions[transactionIndex] as PaymentTransaction;
         const updatedTransaction: PaymentTransaction = {
             amount,
-            date: body?.date ? new Date(body.date) : new Date(existingTransaction.date),
+            date: parsePaymentDate(body?.date ?? existingTransaction.date),
             note: String(body?.note ?? existingTransaction.note ?? "Payment received"),
         };
 
-        customer.transactions[transactionIndex] = updatedTransaction as never;
-        customer.paidAmount = customer.transactions.reduce(
+        const loanStartDate = customer.loanStartDate ?? customer.createdAt ?? updatedTransaction.date;
+        const loanEndDate = customer.loanEndDate ?? addMonthsUtc(loanStartDate, Number(customer.duration || 0));
+
+        const updatedTransactions = customer.transactions.map((transaction, index) =>
+            index === transactionIndex ? updatedTransaction : transaction,
+        );
+        const updatedPaidAmount = updatedTransactions.reduce(
             (sum: number, transaction: PaymentTransaction) => sum + Number(transaction.amount || 0),
             0,
         );
 
-        await customer.save();
+        const updatedCustomer = await Customer.findOneAndUpdate(
+            { customerId },
+            {
+                $set: {
+                    loanStartDate,
+                    loanEndDate,
+                    [`transactions.${transactionIndex}`]: updatedTransaction,
+                    paidAmount: updatedPaidAmount,
+                },
+            },
+            { returnDocument: "after" },
+        );
+
+        if (!updatedCustomer) {
+            return NextResponse.json(
+                { success: false, message: "Customer not found" },
+                { status: 404 }
+            );
+        }
 
         return NextResponse.json({
             success: true,
             message: "Payment updated successfully",
             customer: {
-                id: customer.customerId,
-                paidAmount: customer.paidAmount,
-                transactions: customer.transactions,
+                id: updatedCustomer.customerId,
+                paidAmount: updatedCustomer.paidAmount,
+                transactions: updatedCustomer.transactions,
             },
             transaction: updatedTransaction,
         });

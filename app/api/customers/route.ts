@@ -18,6 +18,27 @@ function normalizeCustomerId(value: string) {
     return value.trim().toUpperCase();
 }
 
+function parseLoanDate(value: unknown) {
+    if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return null;
+    }
+
+    const date = new Date(`${value}T12:00:00.000Z`);
+
+    return Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value
+        ? null
+        : date;
+}
+
+function addMonthsUtc(date: Date, months: number) {
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth() + months;
+    const day = date.getUTCDate();
+    const lastDayOfTargetMonth = new Date(Date.UTC(year, month + 1, 0, 12, 0, 0, 0)).getUTCDate();
+
+    return new Date(Date.UTC(year, month, Math.min(day, lastDayOfTargetMonth), 12, 0, 0, 0));
+}
+
 function isValidCustomerId(value: string) {
     return /^[A-Z0-9]+$/.test(value);
 }
@@ -68,6 +89,8 @@ function serializeCustomer(customer: {
     totalWithInterest: number;
     monthlyPayment: number;
     dailyPayment: number;
+    loanStartDate: Date;
+    loanEndDate: Date;
     paidAmount: number;
     transactions: Array<{ amount: number; date: Date; note?: string }>;
     loanHistory?: Array<{
@@ -77,6 +100,8 @@ function serializeCustomer(customer: {
         totalWithInterest: number;
         monthlyPayment: number;
         dailyPayment: number;
+        loanStartDate: Date;
+        loanEndDate: Date;
         paidAmount: number;
         transactions: Array<{ amount: number; date: Date; note?: string }>;
         status?: "ongoing" | "completed";
@@ -104,6 +129,10 @@ function serializeCustomer(customer: {
         totalWithInterest: customer.totalWithInterest,
         monthlyPayment: customer.monthlyPayment,
         dailyPayment: customer.dailyPayment,
+        loanStartDate: customer.loanStartDate,
+        loanEndDate: customer.loanEndDate,
+        openedAt: customer.loanStartDate,
+        closedAt: remaining > 0 ? undefined : customer.loanEndDate ?? customer.updatedAt,
         paidAmount: customer.paidAmount,
         status: customer.status ?? (remaining > 0 ? "ongoing" : "completed"),
         transactions: customer.transactions,
@@ -191,6 +220,7 @@ export async function POST(request: NextRequest) {
         const loanAmount = toNumber(body?.loanAmount);
         const interestRate = toNumber(body?.interestRate);
         const duration = toNumber(body?.duration);
+        const loanStartDate = parseLoanDate(body?.loanStartDate);
 
         if (!customerId || !name || !contact || !address) {
             return NextResponse.json(
@@ -223,6 +253,13 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        if (!loanStartDate) {
+            return NextResponse.json(
+                { success: false, message: "Loan start date is required" },
+                { status: 400 }
+            );
+        }
+
         const totalWithInterest =
             Number(body?.totalWithInterest) ||
             loanAmount + loanAmount * (interestRate / 100) * duration;
@@ -231,6 +268,7 @@ export async function POST(request: NextRequest) {
         const dailyPayment =
             Number(body?.dailyPayment) ||
             (duration > 0 ? totalWithInterest / (duration * 30) : 0);
+        const loanEndDate = addMonthsUtc(loanStartDate, duration);
 
         await connectToDb();
 
@@ -263,6 +301,8 @@ export async function POST(request: NextRequest) {
             totalWithInterest,
             monthlyPayment,
             dailyPayment,
+            loanStartDate,
+            loanEndDate,
             paidAmount: Number(body?.paidAmount) || 0,
             transactions: Array.isArray(body?.transactions) ? body.transactions : [],
         });

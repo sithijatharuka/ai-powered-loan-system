@@ -30,6 +30,7 @@ export default function AddLoanDialog({
     loanAmount: "",
     interestRate: "",
     duration: "",
+    loanStartDate: "",
   });
 
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -39,7 +40,16 @@ export default function AddLoanDialog({
     }));
   }
 
+  function isValidDateValue(value: string) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(value).getTime());
+  }
+
   async function handleCreateLoan() {
+    if (!isValidDateValue(formData.loanStartDate)) {
+      toast.error("Loan start date is required");
+      return;
+    }
+
     try {
       setSaving(true);
 
@@ -51,6 +61,7 @@ export default function AddLoanDialog({
           loanAmount: Number(formData.loanAmount),
           interestRate: Number(formData.interestRate),
           duration: Number(formData.duration),
+          loanStartDate: formData.loanStartDate,
         }),
       });
 
@@ -62,7 +73,12 @@ export default function AddLoanDialog({
       }
 
       toast.success("New loan added successfully");
-      setFormData({ loanAmount: "", interestRate: "", duration: "" });
+      setFormData({
+        loanAmount: "",
+        interestRate: "",
+        duration: "",
+        loanStartDate: "",
+      });
       router.refresh();
     } catch {
       toast.error("Failed to add new loan");
@@ -118,6 +134,16 @@ export default function AddLoanDialog({
               value={formData.duration}
               onChange={handleChange}
               placeholder="Enter duration"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Loan Start Date</Label>
+            <Input
+              type="date"
+              name="loanStartDate"
+              value={formData.loanStartDate}
+              onChange={handleChange}
             />
           </div>
 

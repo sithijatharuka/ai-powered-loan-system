@@ -28,12 +28,14 @@ export default function AddCustomerDialog({
     loanAmount: "",
     interestRate: "",
     duration: "",
+    loanStartDate: "",
   });
 
   const [saving, setSaving] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [customerIdError, setCustomerIdError] = useState("");
   const [contactError, setContactError] = useState("");
+  const [loanStartDateError, setLoanStartDateError] = useState("");
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.target.name === "customerId" && customerIdError) {
@@ -42,6 +44,10 @@ export default function AddCustomerDialog({
 
     if (e.target.name === "contact" && contactError) {
       setContactError("");
+    }
+
+    if (e.target.name === "loanStartDate" && loanStartDateError) {
+      setLoanStartDateError("");
     }
 
     const value =
@@ -66,6 +72,10 @@ export default function AddCustomerDialog({
 
   function normalizePhoneNumber(value: string) {
     return value.trim().replace(/\D/g, "");
+  }
+
+  function isValidDateValue(value: string) {
+    return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(new Date(value).getTime());
   }
 
   // CALCULATIONS
@@ -104,6 +114,11 @@ export default function AddCustomerDialog({
       return;
     }
 
+    if (!isValidDateValue(formData.loanStartDate)) {
+      setLoanStartDateError("Loan start date is required");
+      return;
+    }
+
     try {
       setSaving(true);
 
@@ -118,6 +133,7 @@ export default function AddCustomerDialog({
           loanAmount: loan,
           interestRate: monthlyRate,
           duration,
+          loanStartDate: formData.loanStartDate,
           totalWithInterest,
           monthlyPayment,
           dailyPayment,
@@ -143,9 +159,11 @@ export default function AddCustomerDialog({
         loanAmount: "",
         interestRate: "",
         duration: "",
+        loanStartDate: "",
       });
       setCustomerIdError("");
       setContactError("");
+      setLoanStartDateError("");
       setDialogOpen(false);
     } catch {
       toast.error("Failed to save customer. Please try again.");
@@ -168,9 +186,11 @@ export default function AddCustomerDialog({
             loanAmount: "",
             interestRate: "",
             duration: "",
+            loanStartDate: "",
           });
           setCustomerIdError("");
           setContactError("");
+          setLoanStartDateError("");
         }
       }}
     >
@@ -269,6 +289,20 @@ export default function AddCustomerDialog({
               onChange={handleChange}
             />
           </div>
+
+          <div className="space-y-2 col-span-2">
+            <Label>Loan Start Date</Label>
+            <Input
+              type="date"
+              name="loanStartDate"
+              value={formData.loanStartDate}
+              onChange={handleChange}
+              aria-invalid={Boolean(loanStartDateError)}
+            />
+            {loanStartDateError ? (
+              <p className="text-xs text-red-600">{loanStartDateError}</p>
+            ) : null}
+          </div>
         </div>
 
         {/* CALCULATION PREVIEW */}
@@ -283,6 +317,10 @@ export default function AddCustomerDialog({
 
           <p>
             Daily Payment: <b>Rs. {dailyPayment.toFixed(2)}</b>
+          </p>
+
+          <p>
+            Loan Start Date: <b>{formData.loanStartDate || "Not set"}</b>
           </p>
         </div>
 
