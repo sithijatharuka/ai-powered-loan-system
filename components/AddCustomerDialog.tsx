@@ -45,7 +45,9 @@ export default function AddCustomerDialog({
     }
 
     const value =
-      e.target.name === "customerId" ? e.target.value.toUpperCase() : e.target.value;
+      e.target.name === "customerId"
+        ? e.target.value.toUpperCase()
+        : e.target.value;
 
     setFormData({
       ...formData,
