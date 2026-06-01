@@ -1,21 +1,3 @@
-## Getting Started
-
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
 # Data Flow Report
 
 ## Overview
@@ -55,78 +37,78 @@ The `Customer` model is the central loan record. It stores both current loan sta
 
 Fields:
 
-| Field                     | Type   | Notes                                              |
-| ------------------------- | ------ | -------------------------------------------------- |
-| `customerId`              | Number | Sequential app-facing ID, unique and indexed       |
-| `name`                    | String | Required, trimmed                                  |
-| `contact`                 | String | Required, unique, indexed, must match `^0\d{9}$`   |
-| `address`                 | String | Required, trimmed                                  |
-| `loanAmount`              | Number | Required, minimum 0                                |
-| `interestRate`            | Number | Required, minimum 0                                |
-| `duration`                | Number | Required, minimum 1                                |
-| `totalWithInterest`       | Number | Required, stored total payable                     |
-| `monthlyPayment`          | Number | Required                                           |
-| `dailyPayment`            | Number | Required                                           |
-| `paidAmount`              | Number | Defaults to 0                                      |
-| `transactions`            | Array  | Embedded payment transactions for the current loan |
-| `loanHistory`             | Array  | Embedded snapshots of previous loans               |
-| `createdAt` / `updatedAt` | Date   | Added by Mongoose timestamps                       |
+| Field | Type | Notes |
+|---|---|---|
+| `customerId` | Number | Sequential app-facing ID, unique and indexed |
+| `name` | String | Required, trimmed |
+| `contact` | String | Required, unique, indexed, must match `^0\d{9}$` |
+| `address` | String | Required, trimmed |
+| `loanAmount` | Number | Required, minimum 0 |
+| `interestRate` | Number | Required, minimum 0 |
+| `duration` | Number | Required, minimum 1 |
+| `totalWithInterest` | Number | Required, stored total payable |
+| `monthlyPayment` | Number | Required |
+| `dailyPayment` | Number | Required |
+| `paidAmount` | Number | Defaults to 0 |
+| `transactions` | Array | Embedded payment transactions for the current loan |
+| `loanHistory` | Array | Embedded snapshots of previous loans |
+| `createdAt` / `updatedAt` | Date | Added by Mongoose timestamps |
 
 Nested transaction shape:
 
-| Field    | Type   | Notes                          |
-| -------- | ------ | ------------------------------ |
-| `amount` | Number | Required                       |
-| `date`   | Date   | Defaults to now                |
-| `note`   | String | Defaults to `Payment received` |
+| Field | Type | Notes |
+|---|---|---|
+| `amount` | Number | Required |
+| `date` | Date | Defaults to now |
+| `note` | String | Defaults to `Payment received` |
 
 Nested loan snapshot shape:
 
-| Field               | Type   | Notes                                  |
-| ------------------- | ------ | -------------------------------------- |
-| `loanAmount`        | Number | Required                               |
-| `interestRate`      | Number | Required                               |
-| `duration`          | Number | Required                               |
-| `totalWithInterest` | Number | Required                               |
-| `monthlyPayment`    | Number | Required                               |
-| `dailyPayment`      | Number | Required                               |
-| `paidAmount`        | Number | Defaults to 0                          |
-| `transactions`      | Array  | Payment history captured for that loan |
-| `status`            | String | `ongoing` or `completed`               |
-| `openedAt`          | Date   | Loan start timestamp                   |
-| `closedAt`          | Date   | Loan end timestamp when complete       |
+| Field | Type | Notes |
+|---|---|---|
+| `loanAmount` | Number | Required |
+| `interestRate` | Number | Required |
+| `duration` | Number | Required |
+| `totalWithInterest` | Number | Required |
+| `monthlyPayment` | Number | Required |
+| `dailyPayment` | Number | Required |
+| `paidAmount` | Number | Defaults to 0 |
+| `transactions` | Array | Payment history captured for that loan |
+| `status` | String | `ongoing` or `completed` |
+| `openedAt` | Date | Loan start timestamp |
+| `closedAt` | Date | Loan end timestamp when complete |
 
 ### Counter
 
 The `Counter` model stores a single sequence document used to generate customer IDs.
 
-| Field  | Type   | Notes                                       |
-| ------ | ------ | ------------------------------------------- |
+| Field | Type | Notes |
+|---|---|---|
 | `name` | String | Unique counter name, currently `customerId` |
-| `seq`  | Number | Current sequence value                      |
+| `seq` | Number | Current sequence value |
 
 ### User
 
 The `User` model supports authentication and role-based access.
 
-| Field      | Type   | Notes                     |
-| ---------- | ------ | ------------------------- |
+| Field | Type | Notes |
+|---|---|---|
 | `username` | String | Unique, required, trimmed |
-| `password` | String | Hashed with bcrypt        |
-| `role`     | String | `admin` or `officer`      |
+| `password` | String | Hashed with bcrypt |
+| `role` | String | `admin` or `officer` |
 
 ### Event
 
 The `Event` model is a separate feature, backed by its own collection.
 
-| Field         | Type   | Notes           |
-| ------------- | ------ | --------------- |
-| `eventName`   | String | Required        |
-| `eventDate`   | Date   | Required        |
-| `eventTime`   | String | Required        |
-| `location`    | String | Required        |
-| `description` | String | Optional        |
-| `createdAt`   | Date   | Defaults to now |
+| Field | Type | Notes |
+|---|---|---|
+| `eventName` | String | Required |
+| `eventDate` | Date | Required |
+| `eventTime` | String | Required |
+| `location` | String | Required |
+| `description` | String | Optional |
+| `createdAt` | Date | Defaults to now |
 
 ## MongoDB Relationships And Sync
 
@@ -317,21 +299,21 @@ Event CRUD is implemented as server actions rather than API routes.
 
 ## API Calls From The UI
 
-| UI Surface             | API Call                              | Purpose                                               |
-| ---------------------- | ------------------------------------- | ----------------------------------------------------- |
-| Login page             | `POST /api/auth/login`                | Authenticate the user and set the session cookie      |
-| Customers page         | `GET /api/customers?search=...`       | Load and search customers                             |
-| Add Customer dialog    | `GET /api/customers/next-id`          | Preview the next sequential customer number           |
-| Add Customer dialog    | `POST /api/customers`                 | Create a new customer and initial loan                |
-| Collections page       | `GET /api/customers?identifier=...`   | Find a customer by customer ID or phone number        |
-| Collections page       | `POST /api/customers/[id]/payments`   | Add a payment transaction                             |
-| Collections page       | `PUT /api/customers/[id]/payments`    | Edit a payment transaction                            |
-| Add Loan dialog        | `PUT /api/customers/[id]`             | Roll a fully paid customer into a new loan            |
-| Customer delete dialog | `DELETE /api/customers/[id]`          | Remove the customer and all embedded loan data        |
-| Dashboard page         | `GET /api/dashboard/summary`          | Fetch dashboard totals and recent transactions        |
-| Profits page           | `GET /api/dashboard/profits?...`      | Fetch profit rows and summary totals for a date range |
-| Settings page          | `GET /api/auth/register?role=officer` | Load officers list                                    |
-| Settings page          | `POST /api/auth/register`             | Create a collection officer                           |
+| UI Surface | API Call | Purpose |
+|---|---|---|
+| Login page | `POST /api/auth/login` | Authenticate the user and set the session cookie |
+| Customers page | `GET /api/customers?search=...` | Load and search customers |
+| Add Customer dialog | `GET /api/customers/next-id` | Preview the next sequential customer number |
+| Add Customer dialog | `POST /api/customers` | Create a new customer and initial loan |
+| Collections page | `GET /api/customers?identifier=...` | Find a customer by customer ID or phone number |
+| Collections page | `POST /api/customers/[id]/payments` | Add a payment transaction |
+| Collections page | `PUT /api/customers/[id]/payments` | Edit a payment transaction |
+| Add Loan dialog | `PUT /api/customers/[id]` | Roll a fully paid customer into a new loan |
+| Customer delete dialog | `DELETE /api/customers/[id]` | Remove the customer and all embedded loan data |
+| Dashboard page | `GET /api/dashboard/summary` | Fetch dashboard totals and recent transactions |
+| Profits page | `GET /api/dashboard/profits?...` | Fetch profit rows and summary totals for a date range |
+| Settings page | `GET /api/auth/register?role=officer` | Load officers list |
+| Settings page | `POST /api/auth/register` | Create a collection officer |
 
 Some pages do not use the API layer for reads. The customer detail page performs a direct server-side MongoDB query, which keeps the page fast and avoids an extra HTTP hop.
 
