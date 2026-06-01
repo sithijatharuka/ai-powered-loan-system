@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { connectToDb } from "@/lib/dbConnect";
-import { Counter } from "@/lib/model/counterModel";
 import { Customer } from "@/lib/model/customerModel";
 
 export const runtime = "nodejs";
@@ -13,6 +12,14 @@ function toNumber(value: unknown) {
 
 function normalizePhoneNumber(value: string) {
     return value.trim().replace(/\D/g, "");
+}
+
+function normalizeCustomerId(value: string) {
+    return value.trim().toUpperCase();
+}
+
+function isValidCustomerId(value: string) {
+    return /^[A-Z0-9]+$/.test(value);
 }
 
 function isValidPhoneNumber(value: string) {
@@ -50,7 +57,7 @@ function getDuplicateField(error: unknown) {
 }
 
 function serializeCustomer(customer: {
-    customerId?: number;
+    customerId?: string;
     _id: { toString(): string };
     name: string;
     contact: string;
@@ -106,65 +113,30 @@ function serializeCustomer(customer: {
     };
 }
 
-async function backfillCustomerIds() {
-    const customersWithoutId = await Customer.find({ customerId: { $exists: false } }).sort({ createdAt: 1 });
-
-    if (customersWithoutId.length === 0) {
-        return;
-    }
-
-    const existingMax = await Customer.findOne({ customerId: { $exists: true } })
-        .sort({ customerId: -1 })
-        .select("customerId");
-
-    const maxCustomerId = existingMax?.customerId ?? 0;
-
-    await Counter.findOneAndUpdate(
-        { name: "customerId" },
-        { $max: { seq: maxCustomerId } },
-        { upsert: true, returnDocument: "after" },
-    );
-
-    for (const customer of customersWithoutId) {
-        const counter = await Counter.findOneAndUpdate(
-            { name: "customerId" },
-            { $inc: { seq: 1 } },
-            { upsert: true, returnDocument: "after" },
-        );
-
-        customer.customerId = counter.seq;
-        await customer.save();
-    }
-}
-
 export async function GET(request: NextRequest) {
     try {
         await connectToDb();
-        await backfillCustomerIds();
 
         const identifier = request.nextUrl.searchParams.get("identifier")?.trim() ?? "";
         const customerIdParam = request.nextUrl.searchParams.get("customerId")?.trim() ?? "";
         const search = request.nextUrl.searchParams.get("search")?.trim() ?? "";
-        const exactCustomerId = Number(customerIdParam);
-        const hasExactCustomerId = customerIdParam !== "" && Number.isInteger(exactCustomerId);
 
-        if (customerIdParam !== "" && !hasExactCustomerId) {
+        if (customerIdParam !== "" && !isValidCustomerId(normalizeCustomerId(customerIdParam))) {
             return NextResponse.json(
-                { success: false, message: "customerId must be a valid integer" },
+                { success: false, message: "customerId must contain only letters and numbers" },
                 { status: 400 }
             );
         }
 
         if (identifier !== "") {
-            const numericIdentifier = Number(identifier);
-            const hasNumericIdentifier = Number.isInteger(numericIdentifier) && numericIdentifier > 0;
+            const normalizedIdentifier = normalizeCustomerId(identifier);
             const normalizedIdentifierPhone = normalizePhoneNumber(identifier);
             const hasValidIdentifierPhone = isValidPhoneNumber(normalizedIdentifierPhone);
 
             let customer = null;
 
-            if (hasNumericIdentifier) {
-                customer = await Customer.findOne({ customerId: numericIdentifier });
+            if (isValidCustomerId(normalizedIdentifier)) {
+                customer = await Customer.findOne({ customerId: normalizedIdentifier });
             }
 
             if (!customer) {
@@ -179,23 +151,19 @@ export async function GET(request: NextRequest) {
             });
         }
 
-        const query = hasExactCustomerId
-            ? { customerId: exactCustomerId }
-            : (() => {
-                const numericSearch = Number(search);
-                const hasNumericSearch = search !== "" && Number.isInteger(numericSearch);
-
-                return search
-                    ? {
-                        $or: [
-                            ...(hasNumericSearch ? [{ customerId: numericSearch }] : []),
-                            { name: { $regex: search, $options: "i" } },
-                            { contact: { $regex: search, $options: "i" } },
-                            { address: { $regex: search, $options: "i" } },
-                        ],
-                    }
-                    : {};
-            })();
+        const normalizedSearch = normalizeCustomerId(search);
+        const query = customerIdParam
+            ? { customerId: normalizeCustomerId(customerIdParam) }
+            : search
+                ? {
+                    $or: [
+                        ...(isValidCustomerId(normalizedSearch) ? [{ customerId: normalizedSearch }] : []),
+                        { name: { $regex: search, $options: "i" } },
+                        { contact: { $regex: search, $options: "i" } },
+                        { address: { $regex: search, $options: "i" } },
+                    ],
+                }
+                : {};
 
         const customers = await Customer.find(query).sort({ createdAt: -1 });
 
@@ -216,6 +184,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json().catch(() => null);
+        const customerId = normalizeCustomerId(String(body?.customerId ?? ""));
         const name = String(body?.name ?? "").trim();
         const contact = normalizePhoneNumber(String(body?.contact ?? ""));
         const address = String(body?.address ?? "").trim();
@@ -223,9 +192,16 @@ export async function POST(request: NextRequest) {
         const interestRate = toNumber(body?.interestRate);
         const duration = toNumber(body?.duration);
 
-        if (!name || !contact || !address) {
+        if (!customerId || !name || !contact || !address) {
             return NextResponse.json(
-                { success: false, message: "Name, contact, and address are required" },
+                { success: false, message: "Customer ID, name, contact, and address are required" },
+                { status: 400 }
+            );
+        }
+
+        if (!isValidCustomerId(customerId)) {
+            return NextResponse.json(
+                { success: false, message: "Customer ID can only contain letters and numbers" },
                 { status: 400 }
             );
         }
@@ -257,9 +233,27 @@ export async function POST(request: NextRequest) {
             (duration > 0 ? totalWithInterest / (duration * 30) : 0);
 
         await connectToDb();
-        await backfillCustomerIds();
+
+        const duplicateCustomerId = await Customer.findOne({ customerId }).select("customerId");
+
+        if (duplicateCustomerId) {
+            return NextResponse.json(
+                { success: false, message: "Customer ID already exists" },
+                { status: 409 }
+            );
+        }
+
+        const duplicateContact = await Customer.findOne({ contact }).select("contact");
+
+        if (duplicateContact) {
+            return NextResponse.json(
+                { success: false, message: "Customer phone number already exists" },
+                { status: 409 }
+            );
+        }
 
         const customer = await Customer.create({
+            customerId,
             name,
             contact,
             address,

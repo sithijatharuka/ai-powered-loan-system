@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Badge } from "./ui/badge";
 
 export default function AddCustomerDialog({
   onCustomerSaved,
@@ -22,6 +21,7 @@ export default function AddCustomerDialog({
   onCustomerSaved?: () => void;
 }) {
   const [formData, setFormData] = useState({
+    customerId: "",
     name: "",
     contact: "",
     address: "",
@@ -32,19 +32,29 @@ export default function AddCustomerDialog({
 
   const [saving, setSaving] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [nextCustomerId, setNextCustomerId] = useState<number | null>(null);
-  const [loadingNextCustomerId, setLoadingNextCustomerId] = useState(false);
+  const [customerIdError, setCustomerIdError] = useState("");
   const [contactError, setContactError] = useState("");
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.name === "customerId" && customerIdError) {
+      setCustomerIdError("");
+    }
+
     if (e.target.name === "contact" && contactError) {
       setContactError("");
     }
 
+    const value =
+      e.target.name === "customerId" ? e.target.value.toUpperCase() : e.target.value;
+
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [e.target.name]: value,
     });
+  }
+
+  function isValidCustomerId(value: string) {
+    return /^[A-Z0-9]+$/.test(value.trim());
   }
 
   function isValidPhoneNumber(value: string) {
@@ -55,32 +65,6 @@ export default function AddCustomerDialog({
   function normalizePhoneNumber(value: string) {
     return value.trim().replace(/\D/g, "");
   }
-
-  async function loadNextCustomerId() {
-    setLoadingNextCustomerId(true);
-
-    try {
-      const response = await fetch("/api/customers/next-id");
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        setNextCustomerId(null);
-        return;
-      }
-
-      setNextCustomerId(Number(data.nextCustomerId));
-    } catch {
-      setNextCustomerId(null);
-    } finally {
-      setLoadingNextCustomerId(false);
-    }
-  }
-
-  useEffect(() => {
-    if (dialogOpen) {
-      void loadNextCustomerId();
-    }
-  }, [dialogOpen]);
 
   // CALCULATIONS
 
@@ -98,7 +82,18 @@ export default function AddCustomerDialog({
   const dailyPayment = duration > 0 ? totalWithInterest / (duration * 30) : 0;
 
   async function handleSubmit() {
+    const customerIdValue = formData.customerId.trim().toUpperCase();
     const contactValue = normalizePhoneNumber(formData.contact);
+
+    if (!customerIdValue) {
+      setCustomerIdError("Customer ID is required");
+      return;
+    }
+
+    if (!isValidCustomerId(customerIdValue)) {
+      setCustomerIdError("Customer ID can only contain letters and numbers");
+      return;
+    }
 
     if (!isValidPhoneNumber(contactValue)) {
       setContactError(
@@ -114,8 +109,10 @@ export default function AddCustomerDialog({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ...formData,
+          customerId: customerIdValue,
+          name: formData.name,
           contact: contactValue,
+          address: formData.address,
           loanAmount: loan,
           interestRate: monthlyRate,
           duration,
@@ -136,8 +133,8 @@ export default function AddCustomerDialog({
 
       toast.success("Customer saved successfully!");
       onCustomerSaved?.();
-      await loadNextCustomerId();
       setFormData({
+        customerId: "",
         name: "",
         contact: "",
         address: "",
@@ -145,6 +142,7 @@ export default function AddCustomerDialog({
         interestRate: "",
         duration: "",
       });
+      setCustomerIdError("");
       setContactError("");
       setDialogOpen(false);
     } catch {
@@ -161,6 +159,7 @@ export default function AddCustomerDialog({
         setDialogOpen(open);
         if (!open) {
           setFormData({
+            customerId: "",
             name: "",
             contact: "",
             address: "",
@@ -168,6 +167,7 @@ export default function AddCustomerDialog({
             interestRate: "",
             duration: "",
           });
+          setCustomerIdError("");
           setContactError("");
         }
       }}
@@ -183,13 +183,25 @@ export default function AddCustomerDialog({
       <DialogContent className="rounded-2xl sm:max-w-150">
         <DialogHeader>
           <DialogTitle>Add New Customer</DialogTitle>
-          <Badge className="rounded-full p-3 bg-blue-50 text-blue-600 border border-blue-200">
-            Customer #{loadingNextCustomerId ? "..." : (nextCustomerId ?? "-")}
-          </Badge>
         </DialogHeader>
 
         {/* Form */}
         <div className="grid grid-cols-2 gap-4 py-4">
+          <div className="space-y-2 col-span-2">
+            <Label>Customer ID</Label>
+            <Input
+              name="customerId"
+              value={formData.customerId}
+              onChange={handleChange}
+              placeholder="CUS001"
+              autoCapitalize="characters"
+              aria-invalid={Boolean(customerIdError)}
+            />
+            {customerIdError ? (
+              <p className="text-xs text-red-600">{customerIdError}</p>
+            ) : null}
+          </div>
+
           {/* Name */}
           <div className="space-y-2">
             <Label>Customer Name</Label>

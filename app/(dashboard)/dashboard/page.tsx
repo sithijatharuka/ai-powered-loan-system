@@ -25,7 +25,7 @@ type DashboardSummary = {
   monthlyLoanGiven?: number;
   totalCustomers?: number;
   recentTransactions: Array<{
-    customerId: number;
+    customerId: string;
     customerName: string;
     amount: number;
     date: string;

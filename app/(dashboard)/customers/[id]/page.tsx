@@ -42,16 +42,16 @@ export default async function CustomerDetails({
   params: Promise<{ id: string }>;
 }) {
   const { id: customerId } = await params;
-  const numericCustomerId = Number(customerId);
+  const normalizedCustomerId = customerId.trim().toUpperCase();
 
-  if (!Number.isInteger(numericCustomerId) || numericCustomerId <= 0) {
+  if (!/^[A-Z0-9]+$/.test(normalizedCustomerId)) {
     notFound();
   }
 
   await connectToDb();
 
   const customer = await Customer.findOne({
-    customerId: numericCustomerId,
+    customerId: normalizedCustomerId,
   }).lean();
 
   if (!customer) {

@@ -23,7 +23,7 @@ import {
 type ProfitFilter = "today" | "last7days" | "custom" | "monthly";
 
 type ProfitRow = {
-  customerId: number;
+  customerId: string;
   customerName: string;
   paymentAmount: number;
   interestRate: number;

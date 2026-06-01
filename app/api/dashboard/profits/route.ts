@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 type ProfitFilter = "today" | "last7days" | "custom" | "monthly";
 
 type ProfitRow = {
-    customerId: number;
+    customerId: string;
     customerName: string;
     paymentAmount: number;
     interestRate: number;
@@ -138,7 +138,7 @@ export async function GET(request: NextRequest) {
                     : 0;
 
                 rows.push({
-                    customerId: Number(customer.customerId ?? 0),
+                    customerId: String(customer.customerId ?? ""),
                     customerName: String(customer.name ?? "Unknown"),
                     paymentAmount: amount,
                     interestRate,
@@ -178,7 +178,7 @@ export async function GET(request: NextRequest) {
                         : 0;
 
                     rows.push({
-                        customerId: Number(customer.customerId ?? 0),
+                        customerId: String(customer.customerId ?? ""),
                         customerName: String(customer.name ?? "Unknown"),
                         paymentAmount: amount,
                         interestRate,

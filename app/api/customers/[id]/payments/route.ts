@@ -21,15 +21,23 @@ function getTransactionIndex(body: unknown, transactions: PaymentTransaction[]) 
     return transactions.length - 1;
 }
 
+function normalizeCustomerId(value: string) {
+    return value.trim().toUpperCase();
+}
+
+function isValidCustomerId(value: string) {
+    return /^[A-Z0-9]+$/.test(value);
+}
+
 export async function POST(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const { id } = await params;
-        const customerId = Number(id);
+        const customerId = normalizeCustomerId(id);
 
-        if (!Number.isInteger(customerId) || customerId <= 0) {
+        if (!isValidCustomerId(customerId)) {
             return NextResponse.json(
                 { success: false, message: "Invalid customer ID" },
                 { status: 400 }
@@ -91,9 +99,9 @@ export async function PUT(
 ) {
     try {
         const { id } = await params;
-        const customerId = Number(id);
+        const customerId = normalizeCustomerId(id);
 
-        if (!Number.isInteger(customerId) || customerId <= 0) {
+        if (!isValidCustomerId(customerId)) {
             return NextResponse.json(
                 { success: false, message: "Invalid customer ID" },
                 { status: 400 }

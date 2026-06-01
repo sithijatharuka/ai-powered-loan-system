@@ -14,6 +14,14 @@ function normalizePhoneNumber(value: string) {
     return value.trim().replace(/\D/g, "");
 }
 
+function normalizeCustomerId(value: string) {
+    return value.trim().toUpperCase();
+}
+
+function isValidCustomerId(value: string) {
+    return /^[A-Z0-9]+$/.test(value);
+}
+
 function isValidPhoneNumber(value: string) {
     return /^0\d{9}$/.test(value);
 }
@@ -37,7 +45,7 @@ function getDuplicateField(error: unknown) {
 }
 
 function serializeCustomer(customer: {
-    customerId?: number;
+    customerId?: string;
     _id: { toString(): string };
     name: string;
     contact: string;
@@ -125,9 +133,9 @@ export async function GET(
 ) {
     try {
         const { id } = await params;
-        const customerId = Number(id);
+        const customerId = normalizeCustomerId(id);
 
-        if (!Number.isInteger(customerId) || customerId <= 0) {
+        if (!isValidCustomerId(customerId)) {
             return NextResponse.json(
                 { success: false, message: "Invalid customer ID" },
                 { status: 400 }
@@ -165,9 +173,9 @@ export async function PUT(
 ) {
     try {
         const { id } = await params;
-        const customerId = Number(id);
+        const customerId = normalizeCustomerId(id);
 
-        if (!Number.isInteger(customerId) || customerId <= 0) {
+        if (!isValidCustomerId(customerId)) {
             return NextResponse.json(
                 { success: false, message: "Invalid customer ID" },
                 { status: 400 }
@@ -334,9 +342,9 @@ export async function DELETE(
 ) {
     try {
         const { id } = await params;
-        const customerId = Number(id);
+        const customerId = normalizeCustomerId(id);
 
-        if (!Number.isInteger(customerId) || customerId <= 0) {
+        if (!isValidCustomerId(customerId)) {
             return NextResponse.json(
                 { success: false, message: "Invalid customer ID" },
                 { status: 400 }

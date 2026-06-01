@@ -7,7 +7,7 @@ import { User } from "@/lib/model/userModel";
 export const runtime = "nodejs";
 
 type SerializedTransaction = {
-    customerId: number;
+    customerId: string;
     customerName: string;
     amount: number;
     date: string;
@@ -76,7 +76,7 @@ export async function GET() {
                 const profit = (paymentAmount / (100 + interestRate)) * interestRate;
 
                 const entry = {
-                    customerId: Number(customer.customerId ?? 0),
+                    customerId: String(customer.customerId ?? ""),
                     customerName: String(customer.name ?? "Unknown"),
                     amount: paymentAmount,
                     date: new Date(transaction.date).toISOString(),
