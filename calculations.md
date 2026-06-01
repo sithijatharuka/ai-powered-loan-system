@@ -26,31 +26,31 @@ These are the main files that either compute values directly or depend on comput
 - [app/api/customers/next-id/route.ts](app/api/customers/next-id/route.ts)
 - [app/api/dashboard/summary/route.ts](app/api/dashboard/summary/route.ts)
 - [app/api/dashboard/profits/route.ts](app/api/dashboard/profits/route.ts)
-- [app/(dashboard)/customers/[id]/page.tsx](app/(dashboard)/customers/[id]/page.tsx)
-- [app/(dashboard)/dashboard/page.tsx](app/(dashboard)/dashboard/page.tsx)
-- [app/(dashboard)/profits/page.tsx](app/(dashboard)/profits/page.tsx)
+- [app/(dashboard)/customers/[id]/page.tsx](<app/(dashboard)/customers/[id]/page.tsx>)
+- [app/(dashboard)/dashboard/page.tsx](<app/(dashboard)/dashboard/page.tsx>)
+- [app/(dashboard)/profits/page.tsx](<app/(dashboard)/profits/page.tsx>)
 - [lib/model/customerModel.js](lib/model/customerModel.js)
 - [lib/model/counterModel.js](lib/model/counterModel.js)
 
 ## Calculation Summary
 
-| Calculation | Formula / Rule | Where it is used |
-| --- | --- | --- |
-| Total interest | `loanAmount * (interestRate / 100) * duration` | Customer creation, loan creation UI |
-| Total payable amount | `loanAmount + totalInterest` | Customer creation, loan creation UI, customer detail fallback |
-| Monthly payment | `totalWithInterest / duration` when `duration > 0`, otherwise `0` | Customer creation, loan creation UI, new loan flow |
-| Daily payment | `totalWithInterest / (duration * 30)` when `duration > 0`, otherwise `0` | Customer creation, loan creation UI, new loan flow |
-| Remaining balance | `max(totalWithInterest - paidAmount, 0)` | Customer detail, dashboard summary, loan history, status derivation |
-| Completion status | `remaining > 0 ? "ongoing" : "completed"` | Customer serialization, customer detail, dashboard summary, profit report |
-| Repayment progress | `round((paidAmount / totalWithInterest) * 100)` clamped to `0..100` | Customer detail page |
-| Loan finish date | `loanStartDate + duration months` | Customer detail page |
-| Payment profit | `(paymentAmount / (100 + interestRate)) * interestRate` | Dashboard summary, profits report |
-| Monthly loan given | Sum of `loanAmount` for customers created during the current month | Dashboard summary |
-| Monthly collected | Sum of transaction amounts in the current month | Dashboard summary |
-| Collected last 7/30 days | Sum of transaction amounts in the last 7 or 30 days | Dashboard summary |
-| Total loan given / collected / pending | Sums across all customers | Dashboard summary |
-| Profit by range | Sum of per-payment profit across a filtered date range | Profit report |
-| Next customer ID | `max(counter seq, highest existing customerId) + 1` | Next customer ID endpoint, add-customer dialog |
+| Calculation                            | Formula / Rule                                                           | Where it is used                                                          |
+| -------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| Total interest                         | `loanAmount * (interestRate / 100) * duration`                           | Customer creation, loan creation UI                                       |
+| Total payable amount                   | `loanAmount + totalInterest`                                             | Customer creation, loan creation UI, customer detail fallback             |
+| Monthly payment                        | `totalWithInterest / duration` when `duration > 0`, otherwise `0`        | Customer creation, loan creation UI, new loan flow                        |
+| Daily payment                          | `totalWithInterest / (duration * 30)` when `duration > 0`, otherwise `0` | Customer creation, loan creation UI, new loan flow                        |
+| Remaining balance                      | `max(totalWithInterest - paidAmount, 0)`                                 | Customer detail, dashboard summary, loan history, status derivation       |
+| Completion status                      | `remaining > 0 ? "ongoing" : "completed"`                                | Customer serialization, customer detail, dashboard summary, profit report |
+| Repayment progress                     | `round((paidAmount / totalWithInterest) * 100)` clamped to `0..100`      | Customer detail page                                                      |
+| Loan finish date                       | `loanStartDate + duration months`                                        | Customer detail page                                                      |
+| Payment profit                         | `(paymentAmount / (100 + interestRate)) * interestRate`                  | Dashboard summary, profits report                                         |
+| Monthly loan given                     | Sum of `loanAmount` for customers created during the current month       | Dashboard summary                                                         |
+| Monthly collected                      | Sum of transaction amounts in the current month                          | Dashboard summary                                                         |
+| Collected last 7/30 days               | Sum of transaction amounts in the last 7 or 30 days                      | Dashboard summary                                                         |
+| Total loan given / collected / pending | Sums across all customers                                                | Dashboard summary                                                         |
+| Profit by range                        | Sum of per-payment profit across a filtered date range                   | Profit report                                                             |
+| Next customer ID                       | `max(counter seq, highest existing customerId) + 1`                      | Next customer ID endpoint, add-customer dialog                            |
 
 ## Detailed Explanation Of Each Calculation
 
@@ -92,7 +92,7 @@ Where it appears:
 
 - [app/api/customers/[id]/route.ts](app/api/customers/[id]/route.ts)
 - [components/AddLoanDialog.tsx](components/AddLoanDialog.tsx)
-- [app/(dashboard)/customers/[id]/page.tsx](app/(dashboard)/customers/[id]/page.tsx) for display of the result
+- [app/(dashboard)/customers/[id]/page.tsx](<app/(dashboard)/customers/[id]/page.tsx>) for display of the result
 
 How the data flows:
 
@@ -118,7 +118,7 @@ Where it appears:
 - [app/api/customers/route.ts](app/api/customers/route.ts) in `serializeCustomer`
 - [app/api/customers/[id]/route.ts](app/api/customers/[id]/route.ts) in `serializeCustomer` and `buildLoanSnapshot`
 - [app/api/dashboard/summary/route.ts](app/api/dashboard/summary/route.ts)
-- [app/(dashboard)/customers/[id]/page.tsx](app/(dashboard)/customers/[id]/page.tsx)
+- [app/(dashboard)/customers/[id]/page.tsx](<app/(dashboard)/customers/[id]/page.tsx>)
 - [app/api/dashboard/profits/route.ts](app/api/dashboard/profits/route.ts)
 
 How the data flows:
@@ -167,7 +167,7 @@ The dashboard summary endpoint loops over all customers and computes portfolio t
 Where it appears:
 
 - [app/api/dashboard/summary/route.ts](app/api/dashboard/summary/route.ts)
-- [app/(dashboard)/dashboard/page.tsx](app/(dashboard)/dashboard/page.tsx)
+- [app/(dashboard)/dashboard/page.tsx](<app/(dashboard)/dashboard/page.tsx>)
 
 How the data flows:
 
@@ -199,7 +199,7 @@ It then filters those rows by the selected date range and aggregates totals:
 Where it appears:
 
 - [app/api/dashboard/profits/route.ts](app/api/dashboard/profits/route.ts)
-- [app/(dashboard)/profits/page.tsx](app/(dashboard)/profits/page.tsx)
+- [app/(dashboard)/profits/page.tsx](<app/(dashboard)/profits/page.tsx>)
 
 How the data flows:
 
@@ -222,7 +222,7 @@ The customer detail page performs several presentation-side calculations:
 
 Where it appears:
 
-- [app/(dashboard)/customers/[id]/page.tsx](app/(dashboard)/customers/[id]/page.tsx)
+- [app/(dashboard)/customers/[id]/page.tsx](<app/(dashboard)/customers/[id]/page.tsx>)
 
 How the data flows:
 
@@ -265,24 +265,24 @@ If a developer wants to change a calculation, these are the files that usually n
 - [components/AddCustomerDialog.tsx](components/AddCustomerDialog.tsx)
 - [app/api/customers/route.ts](app/api/customers/route.ts)
 - [app/api/customers/[id]/route.ts](app/api/customers/[id]/route.ts)
-- [app/(dashboard)/customers/[id]/page.tsx](app/(dashboard)/customers/[id]/page.tsx)
+- [app/(dashboard)/customers/[id]/page.tsx](<app/(dashboard)/customers/[id]/page.tsx>)
 
 ### Payment And Balance Changes
 
 - [app/api/customers/[id]/payments/route.ts](app/api/customers/[id]/payments/route.ts)
 - [app/api/dashboard/summary/route.ts](app/api/dashboard/summary/route.ts)
 - [app/api/dashboard/profits/route.ts](app/api/dashboard/profits/route.ts)
-- [app/(dashboard)/customers/[id]/page.tsx](app/(dashboard)/customers/[id]/page.tsx)
+- [app/(dashboard)/customers/[id]/page.tsx](<app/(dashboard)/customers/[id]/page.tsx>)
 
 ### Dashboard Summary Changes
 
 - [app/api/dashboard/summary/route.ts](app/api/dashboard/summary/route.ts)
-- [app/(dashboard)/dashboard/page.tsx](app/(dashboard)/dashboard/page.tsx)
+- [app/(dashboard)/dashboard/page.tsx](<app/(dashboard)/dashboard/page.tsx>)
 
 ### Profit Report Changes
 
 - [app/api/dashboard/profits/route.ts](app/api/dashboard/profits/route.ts)
-- [app/(dashboard)/profits/page.tsx](app/(dashboard)/profits/page.tsx)
+- [app/(dashboard)/profits/page.tsx](<app/(dashboard)/profits/page.tsx>)
 
 ### Customer ID Changes
 
