@@ -11,6 +11,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { connectToDb } from "@/lib/dbConnect";
+import { calculateMonthlyPayment, calculateDailyPayment, calculateTotalWithInterest } from "@/lib/calculations";
 import { Customer } from "@/lib/model/customerModel";
 import { notFound } from "next/navigation";
 import AddLoanDialog from "@/components/AddLoanDialog";
@@ -81,8 +82,19 @@ export default async function CustomerDetails({
 
   const totalWithInterest =
     customer.totalWithInterest ??
-    customer.loanAmount +
-      (customer.loanAmount * customer.interestRate * customer.duration) / 100;
+    calculateTotalWithInterest(
+      customer.loanAmount,
+      customer.interestRate,
+      customer.duration,
+    );
+
+  const monthlyPayment =
+    customer.monthlyPayment ??
+    calculateMonthlyPayment(totalWithInterest, customer.duration);
+
+  const dailyPayment =
+    customer.dailyPayment ??
+    calculateDailyPayment(totalWithInterest, customer.duration);
 
   const remaining = totalWithInterest - customer.paidAmount;
   const isLoanComplete = remaining <= 0;
@@ -91,8 +103,8 @@ export default async function CustomerDetails({
     interestRate: customer.interestRate,
     duration: customer.duration,
     totalWithInterest,
-    monthlyPayment: customer.monthlyPayment,
-    dailyPayment: customer.dailyPayment,
+    monthlyPayment,
+    dailyPayment,
     loanStartDate: customer.loanStartDate ?? customer.openedAt ?? customer.createdAt,
     loanEndDate:
       customer.loanEndDate ??

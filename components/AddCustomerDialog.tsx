@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+import { calculateLoanSummary } from "@/lib/calculations";
+
 import {
   Dialog,
   DialogContent,
@@ -81,17 +83,15 @@ export default function AddCustomerDialog({
   // CALCULATIONS
 
   const loan = Number(formData.loanAmount || 0);
-  const monthlyRate = Number(formData.interestRate || 0); // 8
-  const duration = Number(formData.duration || 0); // 2 months
+  const monthlyRate = Number(formData.interestRate || 0);
+  const duration = Number(formData.duration || 0);
 
-  // Total Interest = Principal * (Monthly Rate / 100) * Number of Months
-  const totalInterest = loan * (monthlyRate / 100) * duration;
-
-  const totalWithInterest = loan + totalInterest;
-
-  // Monthly and Daily payments
-  const monthlyPayment = duration > 0 ? totalWithInterest / duration : 0;
-  const dailyPayment = duration > 0 ? totalWithInterest / (duration * 30) : 0;
+  const {
+    totalInterest,
+    totalWithInterest,
+    monthlyPayment,
+    dailyPayment,
+  } = calculateLoanSummary(loan, monthlyRate, duration);
 
   async function handleSubmit() {
     const customerIdValue = formData.customerId.trim().toUpperCase();

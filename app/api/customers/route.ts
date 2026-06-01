@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import {
+  calculateLoanSummary,
+} from "@/lib/calculations";
 import { connectToDb } from "@/lib/dbConnect";
 import { Customer } from "@/lib/model/customerModel";
 
@@ -260,14 +263,18 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        const defaultLoanSummary = calculateLoanSummary(
+            loanAmount,
+            interestRate,
+            duration,
+        );
+
         const totalWithInterest =
-            Number(body?.totalWithInterest) ||
-            loanAmount + loanAmount * (interestRate / 100) * duration;
+            Number(body?.totalWithInterest) || defaultLoanSummary.totalWithInterest;
         const monthlyPayment =
-            Number(body?.monthlyPayment) || (duration > 0 ? totalWithInterest / duration : 0);
+            Number(body?.monthlyPayment) || defaultLoanSummary.monthlyPayment;
         const dailyPayment =
-            Number(body?.dailyPayment) ||
-            (duration > 0 ? totalWithInterest / (duration * 30) : 0);
+            Number(body?.dailyPayment) || defaultLoanSummary.dailyPayment;
         const loanEndDate = addMonthsUtc(loanStartDate, duration);
 
         await connectToDb();

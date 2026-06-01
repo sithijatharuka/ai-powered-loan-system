@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { connectToDb } from "@/lib/dbConnect";
+import {
+    calculatePaymentInterestProfit,
+    calculateRemainingBalance,
+    determineLoanStatus,
+} from "@/lib/calculations";
 import { Customer } from "@/lib/model/customerModel";
 import { User } from "@/lib/model/userModel";
 
@@ -44,9 +49,9 @@ export async function GET() {
         let collectedLast7Days = 0;
 
         for (const customer of customers) {
-            const remaining = Math.max(
-                Number(customer.totalWithInterest || 0) - Number(customer.paidAmount || 0),
-                0,
+            const remaining = calculateRemainingBalance(
+                customer.totalWithInterest,
+                customer.paidAmount,
             );
 
             totalLoanGiven += Number(customer.loanAmount || 0);
@@ -73,7 +78,7 @@ export async function GET() {
                 }
 
                 const paymentAmount = Number(transaction.amount || 0);
-                const profit = (paymentAmount / (100 + interestRate)) * interestRate;
+                const profit = calculatePaymentInterestProfit(paymentAmount, interestRate);
 
                 const entry = {
                     customerId: String(customer.customerId ?? ""),
@@ -81,7 +86,7 @@ export async function GET() {
                     amount: paymentAmount,
                     date: new Date(transaction.date).toISOString(),
                     note: transaction.note,
-                    loanStatus: remaining > 0 ? "ongoing" : "completed",
+                    loanStatus: determineLoanStatus(remaining),
                     remaining,
                 } satisfies SerializedTransaction;
 

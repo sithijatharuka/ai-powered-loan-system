@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import {
+    calculatePaymentInterestProfit,
+    calculateRemainingBalance,
+    determineLoanStatus,
+} from "@/lib/calculations";
 import { connectToDb } from "@/lib/dbConnect";
 import { Customer } from "@/lib/model/customerModel";
 
@@ -114,12 +119,14 @@ export async function GET(request: NextRequest) {
             const interestRate = Number(customer.interestRate || 0);
 
             // include current loan transactions
-            const remainingCurrent = Math.max(
-                Number(customer.totalWithInterest || 0) - Number(customer.paidAmount || 0),
-                0,
+            const remainingCurrent = calculateRemainingBalance(
+                customer.totalWithInterest,
+                customer.paidAmount,
             );
 
-            const currentStatus: "ongoing" | "completed" = remainingCurrent > 0 ? "ongoing" : "completed";
+            const currentStatus: "ongoing" | "completed" = determineLoanStatus(
+                remainingCurrent,
+            );
 
             for (const transaction of customer.transactions ?? []) {
                 const amount = Number(transaction.amount || 0);
@@ -133,9 +140,7 @@ export async function GET(request: NextRequest) {
                     continue;
                 }
 
-                const profit = interestRate > 0
-                    ? (amount / (100 + interestRate)) * interestRate
-                    : 0;
+                const profit = calculatePaymentInterestProfit(amount, interestRate);
 
                 rows.push({
                     customerId: String(customer.customerId ?? ""),
@@ -173,9 +178,7 @@ export async function GET(request: NextRequest) {
                         continue;
                     }
 
-                    const profit = interestRate > 0
-                        ? (amount / (100 + interestRate)) * interestRate
-                        : 0;
+                    const profit = calculatePaymentInterestProfit(amount, interestRate);
 
                     rows.push({
                         customerId: String(customer.customerId ?? ""),

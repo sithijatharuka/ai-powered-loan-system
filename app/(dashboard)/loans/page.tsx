@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
+import {
+  calculateRemainingBalance,
+  determineLoanStatus,
+} from "@/lib/calculations";
 
 import {
   Table,
@@ -74,11 +78,13 @@ export default function Loans() {
 
         const flattenedLoans = (data.customers ?? [])
           .flatMap((customer: CustomerLoan) => {
-            const currentTotal = Number(customer.totalWithInterest || 0);
-            const currentPaid = Number(customer.paidAmount || 0);
-            const currentRemaining = Math.max(currentTotal - currentPaid, 0);
-            const currentStatus: "ongoing" | "completed" =
-              currentRemaining > 0 ? "ongoing" : "completed";
+            const currentRemaining = calculateRemainingBalance(
+              customer.totalWithInterest,
+              customer.paidAmount,
+            );
+            const currentStatus: "ongoing" | "completed" = determineLoanStatus(
+              currentRemaining,
+            );
 
             const currentLoan = {
               ...customer,
@@ -89,10 +95,9 @@ export default function Loans() {
             };
 
             const historyLoans = (customer.loanHistory ?? []).map((loan) => {
-              const historyRemaining = Math.max(
-                Number(loan.totalWithInterest || 0) -
-                  Number(loan.paidAmount || 0),
-                0,
+              const historyRemaining = calculateRemainingBalance(
+                loan.totalWithInterest,
+                loan.paidAmount,
               );
 
               return {
@@ -103,8 +108,7 @@ export default function Loans() {
                 totalWithInterest: loan.totalWithInterest,
                 paidAmount: loan.paidAmount,
                 status:
-                  loan.status ??
-                  (historyRemaining > 0 ? "ongoing" : "completed"),
+                  loan.status ?? determineLoanStatus(historyRemaining),
                 openedAt: loan.openedAt,
                 closedAt: loan.closedAt,
               };
