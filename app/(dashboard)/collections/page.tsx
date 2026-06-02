@@ -697,7 +697,7 @@ export default function Collections() {
                     return txTimes.length > 0 ? Math.max(...txTimes) : 0;
                   };
 
-                  const sorted = filtered.slice().sort((a, b) => getLatestTimestamp(a) - getLatestTimestamp(b));
+                  const sorted = filtered.slice();
 
                   return sorted.map((c, idx) => {
                     const seqId = formatSeqId(idx + 1);
@@ -782,20 +782,7 @@ export default function Collections() {
                   });
                 }
 
-                // Sort entries by transactionId descending (newest/last id first)
-                entries.sort((a, b) => {
-                  const parseId = (tx: any) => {
-                    const id = tx?.transactionId ?? tx?.transactionID ?? "";
-                    const num = Number(String(id).replace(/\D+/g, ""));
-                    return Number.isFinite(num) ? num : 0;
-                  };
-
-                  const na = parseId(a.tx);
-                  const nb = parseId(b.tx);
-
-                  // descending by numeric id
-                  return nb - na;
-                });
+                // No sorting: keep entries in the original collected order
 
                 return entries.map((entry: any, displayIdx: number) => {
                   const c = entry.customer;

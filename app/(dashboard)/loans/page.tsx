@@ -196,28 +196,7 @@ export default function Loans() {
                 </TableCell>
               </TableRow>
             ) : loans.length > 0 ? (
-              loans
-                .sort((a, b) => {
-                  const parseLoanId = (loan: any) => {
-                    const id = loan?.loanId ?? "";
-                    const num = Number(String(id).replace(/\D+/g, ""));
-                    return Number.isFinite(num) ? num : null;
-                  };
-
-                  const aId = parseLoanId(a);
-                  const bId = parseLoanId(b);
-
-                  if (aId !== null && bId !== null) {
-                    // sort by loanId numeric part descending (highest id first)
-                    return bId - aId;
-                  }
-
-                  // fallback: sort by openedAt date descending
-                  const aTs = new Date(a.openedAt ?? a.createdAt ?? 0).getTime();
-                  const bTs = new Date(b.openedAt ?? b.createdAt ?? 0).getTime();
-                  return bTs - aTs;
-                })
-                .map((loan, index) => {
+              loans.map((loan, index) => {
                   const displayLoanId = formatLoanId(index + 1);
                   const totalPayable = loan.totalWithInterest;
 
