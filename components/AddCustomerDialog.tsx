@@ -52,10 +52,12 @@ export default function AddCustomerDialog({
       setLoanStartDateError("");
     }
 
-    const value =
-      e.target.name === "customerId"
-        ? e.target.value.toUpperCase()
-        : e.target.value;
+    let value = e.target.value;
+
+    // For customerId, allow digits only
+    if (e.target.name === "customerId") {
+      value = value.replace(/\D/g, "");
+    }
 
     setFormData({
       ...formData,
@@ -64,7 +66,7 @@ export default function AddCustomerDialog({
   }
 
   function isValidCustomerId(value: string) {
-    return /^[A-Z0-9]+$/.test(value.trim());
+    return /^[0-9]+$/.test(value.trim());
   }
 
   function isValidPhoneNumber(value: string) {
@@ -94,7 +96,7 @@ export default function AddCustomerDialog({
   } = calculateLoanSummary(loan, monthlyRate, duration);
 
   async function handleSubmit() {
-    const customerIdValue = formData.customerId.trim().toUpperCase();
+    const customerIdValue = formData.customerId.trim();
     const contactValue = normalizePhoneNumber(formData.contact);
 
     if (!customerIdValue) {
@@ -103,7 +105,7 @@ export default function AddCustomerDialog({
     }
 
     if (!isValidCustomerId(customerIdValue)) {
-      setCustomerIdError("Customer ID can only contain letters and numbers");
+      setCustomerIdError("Customer ID must contain only numbers");
       return;
     }
 
@@ -212,11 +214,13 @@ export default function AddCustomerDialog({
           <div className="space-y-2 col-span-2">
             <Label>Customer ID</Label>
             <Input
+              type="number"
+              inputMode="numeric"
+              pattern="\d*"
               name="customerId"
               value={formData.customerId}
               onChange={handleChange}
-              placeholder="CUS001"
-              autoCapitalize="characters"
+              placeholder="1"
               aria-invalid={Boolean(customerIdError)}
             />
             {customerIdError ? (
