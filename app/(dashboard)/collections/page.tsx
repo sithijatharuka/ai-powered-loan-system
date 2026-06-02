@@ -58,10 +58,13 @@ export default function Collections() {
       let fetched = data.customers ?? [];
 
       if (fetchOnlyWithTransactions || !searchTerm) {
-        fetched = fetched.filter(
-          (c: any) =>
-            Array.isArray(c.transactions) && c.transactions.length > 0,
-        );
+        fetched = fetched.filter((c: any) => {
+          const hasCurrentTx = Array.isArray(c.transactions) && c.transactions.length > 0;
+          const hasHistoryTx = Array.isArray(c.loanHistory) &&
+            c.loanHistory.some((l: any) => Array.isArray(l.transactions) && l.transactions.length > 0);
+
+          return hasCurrentTx || hasHistoryTx;
+        });
       }
 
       setCustomers(fetched);
@@ -111,11 +114,23 @@ export default function Collections() {
       return true;
     }
 
-    const transactionDateKeys = Array.isArray(c.transactions)
-      ? c.transactions
-          .map((t: any) => toLocalDateKey(t?.date))
-          .filter((dateKey: string) => dateKey !== "")
-      : [];
+    const transactionDateKeys = [] as string[];
+
+    if (Array.isArray(c.transactions)) {
+      transactionDateKeys.push(
+        ...c.transactions.map((t: any) => toLocalDateKey(t?.date)).filter((d: string) => d !== ""),
+      );
+    }
+
+    if (Array.isArray(c.loanHistory)) {
+      c.loanHistory.forEach((loan: any) => {
+        if (Array.isArray(loan.transactions)) {
+          transactionDateKeys.push(
+            ...loan.transactions.map((t: any) => toLocalDateKey(t?.date)).filter((d: string) => d !== ""),
+          );
+        }
+      });
+    }
 
     if (transactionDateKeys.length === 0) {
       return false;
@@ -634,8 +649,25 @@ export default function Collections() {
                   const transactions = Array.isArray(cust.transactions)
                     ? cust.transactions
                     : [];
+
+                  // current loan transactions
                   transactions.forEach((t: any, idx: number) => {
-                    entries.push({ customer: cust, tx: t, txIndex: idx });
+                    entries.push({ customer: cust, tx: t, txIndex: idx, source: "current" });
+                  });
+
+                  // include transactions from historical/completed loans
+                  const loanHistory = Array.isArray(cust.loanHistory) ? cust.loanHistory : [];
+                  loanHistory.forEach((loan: any, loanIdx: number) => {
+                    const histTx = Array.isArray(loan.transactions) ? loan.transactions : [];
+                    histTx.forEach((t: any, txIdx: number) => {
+                      entries.push({
+                        customer: cust,
+                        tx: t,
+                        txIndex: txIdx,
+                        source: "history",
+                        historyLoanIndex: loanIdx,
+                      });
+                    });
                   });
                 });
 
@@ -729,9 +761,10 @@ export default function Collections() {
                   const originalIndex = entry.txIndex;
                   const txDate = t?.date ? toLocalDateKey(t.date) : "-";
                   const txAmount = Number(t?.amount || 0);
+                  const isHistory = entry.source === "history";
 
                   return (
-                    <TableRow key={`${c.id}-${originalIndex}-${displayIdx}`}>
+                    <TableRow key={`${c.id}-${entry.source}-${originalIndex}-${displayIdx}`}>
                       <TableCell className="hidden sm:table-cell text-xs sm:text-sm">
                         {formatCollectionId(c.id)}
                       </TableCell>
@@ -764,8 +797,9 @@ export default function Collections() {
                           size="sm"
                           variant="outline"
                           onClick={() =>
-                            openEditDialogForIndex(c, originalIndex)
+                            !isHistory && openEditDialogForIndex(c, originalIndex)
                           }
+                          disabled={isHistory}
                           className="text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
                         >
                           Edit
