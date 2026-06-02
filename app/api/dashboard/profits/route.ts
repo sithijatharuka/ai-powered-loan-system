@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import {
-  calculatePaymentInterestProfit,
-  calculateRemainingBalance,
-  determineLoanStatus,
-} from "@/lib/calculations";
+import { calculateRemainingBalance, determineLoanStatus } from "@/lib/calculations";
 import { connectToDb } from "@/lib/dbConnect";
 import { Customer } from "@/lib/model/customerModel";
 
@@ -153,18 +149,7 @@ export async function GET(request: NextRequest) {
           continue;
         }
 
-        const profit = calculatePaymentInterestProfit(amount, interestRate);
-
-        // debug
-        console.log(
-          "CURRENT:",
-          customer.customerId,
-          amount,
-          profit,
-          date.toISOString(),
-          currentStatus,
-        );
-        //
+        const profit = Number((transaction as any).profit || 0);
 
         rows.push({
           customerId: String(customer.customerId ?? ""),
@@ -207,18 +192,7 @@ export async function GET(request: NextRequest) {
             continue;
           }
 
-          const profit = calculatePaymentInterestProfit(amount, interestRate);
-
-          //debug 2
-          console.log(
-            "HISTORY:",
-            customer.customerId,
-            amount,
-            profit,
-            date.toISOString(),
-            loanStatus,
-          );
-          //
+          const profit = Number((transaction as any).profit || 0);
 
           rows.push({
             customerId: String(customer.customerId ?? ""),

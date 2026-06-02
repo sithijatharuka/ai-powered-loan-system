@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { connectToDb } from "@/lib/dbConnect";
+import { calculatePaymentInterestProfit } from "@/lib/calculations";
 import { Customer } from "@/lib/model/customerModel";
 
 export const runtime = "nodejs";
@@ -9,6 +10,7 @@ type PaymentTransaction = {
     amount: number;
     date: Date;
     note?: string;
+    profit?: number;
 };
 
 function parsePaymentDate(value: unknown) {
@@ -91,6 +93,7 @@ export async function POST(
             amount,
             date: paymentDate,
             note: String(body?.note ?? "Payment received"),
+            profit: calculatePaymentInterestProfit(amount, Number(customer.interestRate || 0)),
         };
 
         const updatedCustomer = await Customer.findOneAndUpdate(
@@ -189,12 +192,18 @@ export async function PUT(
             amount,
             date: parsePaymentDate(body?.date ?? existingTransaction.date),
             note: String(body?.note ?? existingTransaction.note ?? "Payment received"),
+            // preserve original recorded profit if present; do NOT recalculate here
+            // to ensure profit is only determined at payment time
+            // existingTransaction may have `profit` or be legacy (undefined)
+            // so default to 0 for backward compatibility
+            // @ts-ignore - existingTransaction may have extra fields
+            profit: (existingTransaction as any)?.profit ?? 0,
         };
 
         const loanStartDate = customer.loanStartDate ?? customer.createdAt ?? updatedTransaction.date;
         const loanEndDate = customer.loanEndDate ?? addMonthsUtc(loanStartDate, Number(customer.duration || 0));
 
-        const updatedTransactions = customer.transactions.map((transaction, index) =>
+        const updatedTransactions = customer.transactions.map((transaction: PaymentTransaction, index: number) =>
             index === transactionIndex ? updatedTransaction : transaction,
         );
         const updatedPaidAmount = updatedTransactions.reduce(
