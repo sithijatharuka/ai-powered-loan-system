@@ -243,6 +243,8 @@ export default function Collections() {
     return `C${String(numericId).padStart(2, "0")}`;
   };
 
+  const formatSeqId = (seq: number) => String(seq).padStart(2, "0");
+
   async function searchCustomerByIdOrPhone() {
     const identifier = dialogSearchId.trim();
 
@@ -672,83 +674,115 @@ export default function Collections() {
                 });
 
                 if (entries.length === 0) {
-                  return filtered
-                    .sort((a, b) => a.id - b.id)
-                    .map((c) => {
-                      const totalCollected = Number(
-                        c.paidAmount ??
-                          (Array.isArray(c.transactions)
-                            ? c.transactions.reduce(
-                                (sum: number, t: any) =>
-                                  sum + Number(t.amount || 0),
-                                0,
-                              )
-                            : 0),
-                      );
+                  const getLatestTimestamp = (cust: any) => {
+                    const txTimes: number[] = [];
+                    if (Array.isArray(cust.transactions)) {
+                      txTimes.push(...cust.transactions.map((t: any) => {
+                        const d = new Date(t?.date);
+                        return Number.isNaN(d.getTime()) ? 0 : d.getTime();
+                      }));
+                    }
 
-                      const latestTransaction =
-                        Array.isArray(c.transactions) &&
-                        c.transactions.length > 0
-                          ? c.transactions[c.transactions.length - 1]
-                          : null;
+                    if (Array.isArray(cust.loanHistory)) {
+                      cust.loanHistory.forEach((loan: any) => {
+                        if (Array.isArray(loan.transactions)) {
+                          txTimes.push(...loan.transactions.map((t: any) => {
+                            const d = new Date(t?.date);
+                            return Number.isNaN(d.getTime()) ? 0 : d.getTime();
+                          }));
+                        }
+                      });
+                    }
 
-                      const latestDate = latestTransaction
-                        ? toLocalDateKey(latestTransaction.date)
-                        : "-";
+                    return txTimes.length > 0 ? Math.max(...txTimes) : 0;
+                  };
 
-                      return (
-                        <TableRow key={c.id}>
-                          <TableCell className="hidden sm:table-cell text-xs sm:text-sm">
-                            {formatCollectionId(c.id)}
-                          </TableCell>
+                  const sorted = filtered.slice().sort((a, b) => getLatestTimestamp(a) - getLatestTimestamp(b));
 
-                          <TableCell className="font-medium text-xs sm:text-sm">
-                            {c.name}
-                          </TableCell>
+                  return sorted.map((c, idx) => {
+                    const seqId = formatSeqId(idx + 1);
+                    const totalCollected = Number(
+                      c.paidAmount ??
+                        (Array.isArray(c.transactions)
+                          ? c.transactions.reduce(
+                              (sum: number, t: any) =>
+                                sum + Number(t.amount || 0),
+                              0,
+                            )
+                          : 0),
+                    );
 
-                          <TableCell className="text-xs sm:text-sm">
-                            Rs. {totalCollected.toLocaleString()}
-                          </TableCell>
+                    // find latest transaction across current and history
+                    const allTxDates: number[] = [];
+                    if (Array.isArray(c.transactions)) {
+                      allTxDates.push(...c.transactions.map((t: any) => {
+                        const d = new Date(t?.date);
+                        return Number.isNaN(d.getTime()) ? 0 : d.getTime();
+                      }));
+                    }
+                    if (Array.isArray(c.loanHistory)) {
+                      c.loanHistory.forEach((loan: any) => {
+                        if (Array.isArray(loan.transactions)) {
+                          allTxDates.push(...loan.transactions.map((t: any) => {
+                            const d = new Date(t?.date);
+                            return Number.isNaN(d.getTime()) ? 0 : d.getTime();
+                          }));
+                        }
+                      });
+                    }
 
-                          <TableCell className="text-xs sm:text-sm">
-                            {latestDate}
-                          </TableCell>
+                    const latestTs = allTxDates.length > 0 ? Math.max(...allTxDates) : 0;
+                    const latestDate = latestTs ? toLocalDateKey(new Date(latestTs).toISOString()) : "-";
 
-                          <TableCell className="text-xs sm:text-sm hidden sm:table-cell">
-                            <Badge
-                              variant={
-                                c.status === "completed"
-                                  ? "default"
-                                  : "destructive"
-                              }
-                              className="text-xs"
-                            >
-                              {c.status === "completed"
-                                ? "Completed"
-                                : "Ongoing"}
-                            </Badge>
-                          </TableCell>
+                    return (
+                      <TableRow key={c.id}>
+                        <TableCell className="hidden sm:table-cell text-xs sm:text-sm">{seqId}</TableCell>
 
-                          <TableCell className="text-right">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openEditDialog(c)}
-                              disabled={
-                                !Array.isArray(c.transactions) ||
-                                c.transactions.length === 0
-                              }
-                              className="text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
-                            >
-                              Edit
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    });
+                        <TableCell className="font-medium text-xs sm:text-sm">
+                          {c.name}
+                        </TableCell>
+
+                        <TableCell className="text-xs sm:text-sm">
+                          Rs. {totalCollected.toLocaleString()}
+                        </TableCell>
+
+                        <TableCell className="text-xs sm:text-sm">
+                          {latestDate}
+                        </TableCell>
+
+                        <TableCell className="text-xs sm:text-sm hidden sm:table-cell">
+                          <Badge
+                            variant={
+                              c.status === "completed"
+                                ? "default"
+                                : "destructive"
+                            }
+                            className="text-xs"
+                          >
+                            {c.status === "completed" ? "Completed" : "Ongoing"}
+                          </Badge>
+                        </TableCell>
+
+                        <TableCell className="text-right">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openEditDialog(c)}
+                            disabled={
+                              !Array.isArray(c.transactions) ||
+                              c.transactions.length === 0
+                            }
+                            className="text-xs sm:text-sm h-8 sm:h-9 px-2 sm:px-3"
+                          >
+                            Edit
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  });
                 }
 
-                // Sort entries by tx date ascending so latest payment appears at bottom
+                // Sort entries by tx date ascending so newest appears at bottom
                 entries.sort((a, b) => {
                   const ta = a.tx?.date ? new Date(a.tx.date).getTime() : 0;
                   const tb = b.tx?.date ? new Date(b.tx.date).getTime() : 0;
@@ -762,12 +796,12 @@ export default function Collections() {
                   const txDate = t?.date ? toLocalDateKey(t.date) : "-";
                   const txAmount = Number(t?.amount || 0);
                   const isHistory = entry.source === "history";
+                  const seqId = formatSeqId(displayIdx + 1);
 
                   return (
                     <TableRow key={`${c.id}-${entry.source}-${originalIndex}-${displayIdx}`}>
-                      <TableCell className="hidden sm:table-cell text-xs sm:text-sm">
-                        {formatCollectionId(c.id)}
-                      </TableCell>
+                      <TableCell className="hidden sm:table-cell text-xs sm:text-sm">{seqId}</TableCell>
+                      
 
                       <TableCell className="font-medium text-xs sm:text-sm">
                         {c.name}
