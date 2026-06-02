@@ -25,6 +25,7 @@ type DashboardSummary = {
   monthlyLoanGiven?: number;
   totalCustomers?: number;
   recentTransactions: Array<{
+    txId?: string;
     customerId: string;
     customerName: string;
     amount: number;
@@ -186,7 +187,7 @@ export default function Dashboard() {
             <TableBody>
               {recentTransactions.length > 0 ? (
                 recentTransactions.map((t) => (
-                  <TableRow key={`${t.customerId}-${t.date}-${t.amount}`}>
+                  <TableRow key={t.txId ?? `${t.customerId}-${t.date}-${t.amount}`}>
                     <TableCell>
                       {t.customerId} - {t.customerName}
                     </TableCell>
