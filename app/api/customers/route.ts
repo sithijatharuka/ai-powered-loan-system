@@ -5,6 +5,7 @@ import {
 } from "@/lib/calculations";
 import { connectToDb } from "@/lib/dbConnect";
 import { Customer } from "@/lib/model/customerModel";
+import { Counter } from "@/lib/model/counterModel";
 
 export const runtime = "nodejs";
 
@@ -297,6 +298,16 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // generate initial loan id for this customer's first loan
+        const loanCounter = await Counter.findOneAndUpdate(
+            { name: "loan" },
+            { $inc: { seq: 1 } },
+            { new: true, upsert: true },
+        );
+
+        const loanSeq = Number(loanCounter?.seq || 0);
+        const initialLoanId = `L${String(loanSeq).padStart(2, "0")}`;
+
         const customer = await Customer.create({
             customerId,
             name,
@@ -312,6 +323,7 @@ export async function POST(request: NextRequest) {
             loanEndDate,
             paidAmount: Number(body?.paidAmount) || 0,
             transactions: Array.isArray(body?.transactions) ? body.transactions : [],
+            loanId: initialLoanId,
         });
 
         return NextResponse.json(

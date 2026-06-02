@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDb } from "@/lib/dbConnect";
 import { calculatePaymentInterestProfit } from "@/lib/calculations";
 import { Customer } from "@/lib/model/customerModel";
+import { Counter } from "@/lib/model/counterModel";
 
 export const runtime = "nodejs";
 
@@ -89,7 +90,18 @@ export async function POST(
         const paymentDate = parsePaymentDate(body?.date);
         const loanStartDate = customer.loanStartDate ?? customer.createdAt ?? paymentDate;
         const loanEndDate = customer.loanEndDate ?? addMonthsUtc(loanStartDate, Number(customer.duration || 0));
+        // generate a global transaction sequence (C01, C02, ...)
+        const counter = await Counter.findOneAndUpdate(
+            { name: "transaction" },
+            { $inc: { seq: 1 } },
+            { new: true, upsert: true },
+        );
+
+        const txSeq = Number(counter?.seq || 0);
+        const transactionId = `C${String(txSeq).padStart(2, "0")}`;
+
         const transaction = {
+            transactionId,
             amount,
             date: paymentDate,
             note: String(body?.note ?? "Payment received"),

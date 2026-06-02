@@ -5,6 +5,7 @@ import {
 } from "@/lib/calculations";
 import { connectToDb } from "@/lib/dbConnect";
 import { Customer } from "@/lib/model/customerModel";
+import { Counter } from "@/lib/model/counterModel";
 
 export const runtime = "nodejs";
 
@@ -319,11 +320,34 @@ export async function PUT(
             const resolvedLoanStartDate = loanStartDate ?? existingCustomer.loanStartDate ?? existingCustomer.createdAt;
             const resolvedLoanEndDate = addMonthsUtc(resolvedLoanStartDate, duration);
 
-            const completedLoan = buildLoanSnapshot(existingCustomer);
+            // assign a loanId to the completed (rolled-over) loan
+            const completedLoanBase = buildLoanSnapshot(existingCustomer);
+            const completedCounter = await Counter.findOneAndUpdate(
+                { name: "loan" },
+                { $inc: { seq: 1 } },
+                { new: true, upsert: true },
+            );
+
+            const completedSeq = Number(completedCounter?.seq || 0);
+            const completedLoan = {
+                ...completedLoanBase,
+                loanId: `L${String(completedSeq).padStart(2, "0")}`,
+            };
+
             const loanHistory = [
                 ...(existingCustomer.loanHistory ?? []),
                 completedLoan,
             ];
+
+            // assign a new loanId for the fresh loan
+            const newCounter = await Counter.findOneAndUpdate(
+                { name: "loan" },
+                { $inc: { seq: 1 } },
+                { new: true, upsert: true },
+            );
+
+            const newSeq = Number(newCounter?.seq || 0);
+            const newLoanId = `L${String(newSeq).padStart(2, "0")}`;
 
             const customer = await Customer.findOneAndUpdate(
                 { customerId },
@@ -342,6 +366,7 @@ export async function PUT(
                     paidAmount: 0,
                     transactions: [],
                     loanHistory,
+                    loanId: newLoanId,
                 },
                 { returnDocument: "after" }
             );
