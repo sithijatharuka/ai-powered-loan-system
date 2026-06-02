@@ -201,6 +201,9 @@ export async function PUT(
 
         const existingTransaction = customer.transactions[transactionIndex] as PaymentTransaction;
         const updatedTransaction: PaymentTransaction = {
+            // preserve original transactionId when editing
+            // @ts-ignore - existingTransaction may have extra fields
+            transactionId: (existingTransaction as any)?.transactionId,
             amount,
             date: parsePaymentDate(body?.date ?? existingTransaction.date),
             note: String(body?.note ?? existingTransaction.note ?? "Payment received"),

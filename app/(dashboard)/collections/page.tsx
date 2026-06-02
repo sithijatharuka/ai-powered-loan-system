@@ -782,11 +782,19 @@ export default function Collections() {
                   });
                 }
 
-                // Sort entries by tx date ascending so newest appears at bottom
+                // Sort entries by transactionId descending (newest/last id first)
                 entries.sort((a, b) => {
-                  const ta = a.tx?.date ? new Date(a.tx.date).getTime() : 0;
-                  const tb = b.tx?.date ? new Date(b.tx.date).getTime() : 0;
-                  return ta - tb;
+                  const parseId = (tx: any) => {
+                    const id = tx?.transactionId ?? tx?.transactionID ?? "";
+                    const num = Number(String(id).replace(/\D+/g, ""));
+                    return Number.isFinite(num) ? num : 0;
+                  };
+
+                  const na = parseId(a.tx);
+                  const nb = parseId(b.tx);
+
+                  // descending by numeric id
+                  return nb - na;
                 });
 
                 return entries.map((entry: any, displayIdx: number) => {
