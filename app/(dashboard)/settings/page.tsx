@@ -25,6 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
+import { Trash2 } from "lucide-react";
 
 type Officer = {
   id: string;
@@ -38,6 +39,9 @@ export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [addOfficerDialogOpen, setAddOfficerDialogOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [officerToDelete, setOfficerToDelete] = useState<{ id: string; username: string } | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -119,6 +123,39 @@ export default function Settings() {
       toast.error("Failed to save officer");
     } finally {
       setSaving(false);
+    }
+  }
+
+  function openDeleteDialog(officerId: string, username: string) {
+    setOfficerToDelete({ id: officerId, username });
+    setDeleteDialogOpen(true);
+  }
+
+  async function confirmDelete() {
+    if (!officerToDelete) return;
+
+    try {
+      setDeletingId(officerToDelete.id);
+
+      const response = await fetch(`/api/auth/register?id=${officerToDelete.id}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        toast.error(data.message || "Failed to delete officer");
+        return;
+      }
+
+      toast.success("Officer deleted successfully");
+      await loadOfficers();
+      setDeleteDialogOpen(false);
+      setOfficerToDelete(null);
+    } catch {
+      toast.error("Failed to delete officer");
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -223,6 +260,10 @@ export default function Settings() {
               <TableHead className="whitespace-nowrap text-xs sm:text-sm">
                 Role
               </TableHead>
+
+              <TableHead className="whitespace-nowrap text-xs sm:text-sm text-right">
+                Actions
+              </TableHead>
             </TableRow>
           </TableHeader>
 
@@ -231,7 +272,7 @@ export default function Settings() {
             {loading ? (
               <TableRow>
                 <TableCell
-                  colSpan={3}
+                  colSpan={4}
                   className="h-24 text-center text-zinc-500 text-xs sm:text-sm"
                 >
                   Loading officers...
@@ -251,12 +292,28 @@ export default function Settings() {
                   <TableCell className="capitalize text-xs sm:text-sm whitespace-nowrap">
                     {officer.role}
                   </TableCell>
+
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openDeleteDialog(officer.id, officer.username)}
+                      disabled={deletingId === officer.id}
+                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      {deletingId === officer.id ? (
+                        <span className="text-xs">...</span>
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={3}
+                  colSpan={4}
                   className="h-24 text-center text-zinc-500 text-xs sm:text-sm"
                 >
                   No officers found
@@ -266,6 +323,36 @@ export default function Settings() {
           </TableBody>
         </Table>
       </div>
+
+      {/* DELETE CONFIRMATION DIALOG */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-md rounded-2xl p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle className="text-base sm:text-lg">Delete Officer</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground py-4">
+            Are you sure you want to delete officer &quot;{officerToDelete?.username}&quot;? This action cannot be undone.
+          </p>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={!!deletingId}
+              className="text-xs sm:text-sm h-9 sm:h-10"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              disabled={!!deletingId}
+              className="text-xs sm:text-sm h-9 sm:h-10"
+            >
+              {deletingId ? "Deleting..." : "Delete"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

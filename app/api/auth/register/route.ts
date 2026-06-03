@@ -145,3 +145,73 @@ export async function POST(request: NextRequest) {
         );
     }
 }
+
+export async function DELETE(request: NextRequest) {
+    try {
+        const currentUser = getAuthUser(request);
+
+        if (!currentUser) {
+            return NextResponse.json(
+                { success: false, message: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
+        if (currentUser.role !== "admin") {
+            return NextResponse.json(
+                { success: false, message: "Forbidden" },
+                { status: 403 }
+            );
+        }
+
+        const userId = request.nextUrl.searchParams.get("id");
+
+        if (!userId) {
+            return NextResponse.json(
+                { success: false, message: "User ID is required" },
+                { status: 400 }
+            );
+        }
+
+        await connectToDb();
+
+        // Prevent deleting yourself
+        if (userId === currentUser.id) {
+            return NextResponse.json(
+                { success: false, message: "Cannot delete your own account" },
+                { status: 400 }
+            );
+        }
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return NextResponse.json(
+                { success: false, message: "User not found" },
+                { status: 404 }
+            );
+        }
+
+        // Prevent deleting admin users
+        if (user.role === "admin") {
+            return NextResponse.json(
+                { success: false, message: "Cannot delete admin users" },
+                { status: 403 }
+            );
+        }
+
+        await User.findByIdAndDelete(userId);
+
+        return NextResponse.json({
+            success: true,
+            message: "Officer deleted successfully",
+        });
+    } catch (error) {
+        console.error("Delete user error:", error);
+
+        return NextResponse.json(
+            { success: false, message: "Failed to delete user" },
+            { status: 500 }
+        );
+    }
+}
