@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import AddCustomerDialog from "@/components/AddCustomerDialog";
+import EditCustomerDialog from "@/components/EditCustomerDialog";
 
 export default function CustomersPage() {
   const [search, setSearch] = useState("");
@@ -164,14 +165,18 @@ export default function CustomersPage() {
                     </TableCell>
 
                     <TableCell className="text-right">
-                      <Link href={`/customers/${c.id}`}>
-                        <Button
-                          size="sm"
-                          className="rounded-lg cursor-pointer text-xs sm:text-sm"
-                        >
-                          View
-                        </Button>
-                      </Link>
+                      <div className="flex items-center justify-end gap-2">
+                        <EditCustomerDialog customer={c} onCustomerSaved={() => void loadCustomers()} />
+
+                        <Link href={`/customers/${c.id}`}>
+                          <Button
+                            size="sm"
+                            className="rounded-lg cursor-pointer text-xs sm:text-sm"
+                          >
+                            View
+                          </Button>
+                        </Link>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
