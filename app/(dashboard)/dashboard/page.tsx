@@ -113,7 +113,7 @@ export default function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle>
-              Total amount collected from customers — {monthName}
+              Total amount collected from customers — {monthName} 
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xl font-bold text-green-600">
