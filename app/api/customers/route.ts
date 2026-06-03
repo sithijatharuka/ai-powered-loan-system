@@ -306,7 +306,7 @@ export async function POST(request: NextRequest) {
         );
 
         const loanSeq = Number(loanCounter?.seq || 0);
-        const initialLoanId = `L${String(loanSeq).padStart(2, "0")}`;
+        const initialLoanId = `L${loanSeq}`;
 
         const customer = await Customer.create({
             customerId,

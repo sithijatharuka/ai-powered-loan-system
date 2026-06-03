@@ -331,7 +331,7 @@ export async function PUT(
             const completedSeq = Number(completedCounter?.seq || 0);
             const completedLoan = {
                 ...completedLoanBase,
-                loanId: `L${String(completedSeq).padStart(2, "0")}`,
+                loanId: `L${completedSeq}`,
             };
 
             const loanHistory = [
@@ -347,7 +347,7 @@ export async function PUT(
             );
 
             const newSeq = Number(newCounter?.seq || 0);
-            const newLoanId = `L${String(newSeq).padStart(2, "0")}`;
+            const newLoanId = `L${newSeq}`;
 
             const customer = await Customer.findOneAndUpdate(
                 { customerId },

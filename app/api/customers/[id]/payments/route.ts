@@ -98,7 +98,7 @@ export async function POST(
         );
 
         const txSeq = Number(counter?.seq || 0);
-        const transactionId = `C${String(txSeq).padStart(2, "0")}`;
+        const transactionId = `C${txSeq}`;
 
         const transaction = {
             transactionId,

@@ -782,7 +782,15 @@ export default function Collections() {
                   });
                 }
 
-                // No sorting: keep entries in the original collected order
+                // Sort entries by transactionId descending (C8 → C7 → C6...)
+                entries.sort((a, b) => {
+                  const parseId = (tx: any) => {
+                    const id = tx?.transactionId ?? "";
+                    const num = Number(String(id).replace(/\D+/g, ""));
+                    return Number.isFinite(num) ? num : 0;
+                  };
+                  return parseId(b.tx) - parseId(a.tx);
+                });
 
                 return entries.map((entry: any, displayIdx: number) => {
                   const c = entry.customer;
@@ -791,11 +799,11 @@ export default function Collections() {
                   const txDate = t?.date ? toLocalDateKey(t.date) : "-";
                   const txAmount = Number(t?.amount || 0);
                   const isHistory = entry.source === "history";
-                  const seqId = formatSeqId(displayIdx + 1);
+                  const seqId = entries.length - displayIdx;
 
                   return (
                     <TableRow key={`${c.id}-${entry.source}-${originalIndex}-${displayIdx}`}>
-                      <TableCell className="hidden sm:table-cell text-xs sm:text-sm">{seqId}</TableCell>
+                      <TableCell className="hidden sm:table-cell text-xs sm:text-sm">C{seqId}</TableCell>
                       
 
                       <TableCell className="font-medium text-xs sm:text-sm">
