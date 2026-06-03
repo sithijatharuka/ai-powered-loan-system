@@ -146,6 +146,63 @@ export async function POST(request: NextRequest) {
     }
 }
 
+export async function PUT(request: NextRequest) {
+    try {
+        const currentUser = getAuthUser(request);
+
+        if (!currentUser) {
+            return NextResponse.json(
+                { success: false, message: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
+        if (currentUser.role !== "admin") {
+            return NextResponse.json(
+                { success: false, message: "Forbidden" },
+                { status: 403 }
+            );
+        }
+
+        const body = await request.json().catch(() => null);
+        const userId = body?.id;
+        const newPassword = String(body?.password ?? "");
+
+        if (!userId || !newPassword) {
+            return NextResponse.json(
+                { success: false, message: "User ID and password are required" },
+                { status: 400 }
+            );
+        }
+
+        await connectToDb();
+
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return NextResponse.json(
+                { success: false, message: "User not found" },
+                { status: 404 }
+            );
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 12);
+        await User.findByIdAndUpdate(userId, { password: hashedPassword });
+
+        return NextResponse.json({
+            success: true,
+            message: "Password updated successfully",
+        });
+    } catch (error) {
+        console.error("Update password error:", error);
+
+        return NextResponse.json(
+            { success: false, message: "Failed to update password" },
+            { status: 500 }
+        );
+    }
+}
+
 export async function DELETE(request: NextRequest) {
     try {
         const currentUser = getAuthUser(request);
