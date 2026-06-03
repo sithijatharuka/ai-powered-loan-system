@@ -27,6 +27,7 @@ type LoanHistoryRow = {
   paidAmount: number;
   transactions: Array<{ amount: number; date: string | Date; note?: string }>;
   status?: "ongoing" | "completed";
+  loanId?: string;
   openedAt?: string | Date;
   closedAt?: string | Date;
 };
@@ -41,6 +42,7 @@ type CustomerLoan = {
   totalWithInterest: number;
   paidAmount: number;
   loanHistory?: LoanHistoryRow[];
+  loanId?: string;
   openedAt?: string | Date;
   createdAt?: string | Date;
   updatedAt?: string | Date;
@@ -111,14 +113,27 @@ export default function Loans() {
                   loan.status ?? determineLoanStatus(historyRemaining),
                 openedAt: loan.openedAt,
                 closedAt: loan.closedAt,
+                loanId: (loan as any).loanId,
               };
             });
 
-            return [currentLoan, ...historyLoans];
+            return [
+              { ...currentLoan, loanId: (customer as any).loanId },
+              ...historyLoans,
+            ];
           })
-          .map((loan: CustomerLoan, index: number) => ({
+          .sort((a: any, b: any) => {
+            // Sort by loanId descending (L8 → L7 → L6...)
+            const parseId = (loan: any) => {
+              const id = loan?.loanId ?? "";
+              const num = Number(String(id).replace(/\D+/g, ""));
+              return Number.isFinite(num) ? num : 0;
+            };
+            return parseId(b) - parseId(a);
+          })
+          .map((loan: any, index: number) => ({
             ...loan,
-            loanId: formatLoanId(index + 1),
+            displaySeq: index + 1,
           }));
 
         setLoans(flattenedLoans);
@@ -196,8 +211,8 @@ export default function Loans() {
                 </TableCell>
               </TableRow>
             ) : loans.length > 0 ? (
-              loans.map((loan, index) => {
-                  const displayLoanId = formatLoanId(index + 1);
+              loans.map((loan) => {
+                  const displayLoanId = loan.loanId || "-";
                   const totalPayable = loan.totalWithInterest;
 
                   const remaining = totalPayable - loan.paidAmount;

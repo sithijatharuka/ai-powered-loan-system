@@ -282,6 +282,7 @@ export default function Collections() {
 
     setDialogSubmitLoading(true);
     try {
+      console.log("Submitting payment for customer:", dialogCustomer.id);
       const response = await fetch(
         `/api/customers/${dialogCustomer.id}/payments`,
         {
@@ -301,7 +302,14 @@ export default function Collections() {
         setDialogDate(new Date().toISOString().slice(0, 10));
         setAddPaymentDialogOpen(false);
         void loadCustomers(search, true);
+      } else {
+        const errorData = await response.json();
+        console.error("Payment failed:", errorData);
+        alert(`Payment failed: ${errorData.message || "Unknown error"}`);
       }
+    } catch (error) {
+      console.error("Payment error:", error);
+      alert("Failed to submit payment");
     } finally {
       setDialogSubmitLoading(false);
     }
