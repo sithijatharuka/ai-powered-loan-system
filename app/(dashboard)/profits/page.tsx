@@ -20,7 +20,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-type ProfitFilter = "today" | "last7days" | "custom" | "monthly";
+type ProfitFilter = "monthly";
 
 type ProfitRow = {
   customerId: string;
@@ -48,13 +48,7 @@ function toMonthInputValue(date: Date) {
 }
 
 export default function Profits() {
-  const [filter, setFilter] = useState<ProfitFilter>("today");
-  const [customStartDate, setCustomStartDate] = useState(
-    toDateInputValue(new Date()),
-  );
-  const [customEndDate, setCustomEndDate] = useState(
-    toDateInputValue(new Date()),
-  );
+  const [filter, setFilter] = useState<ProfitFilter>("monthly");
   const [month, setMonth] = useState(toMonthInputValue(new Date()));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -64,12 +58,7 @@ export default function Profits() {
     totalPayments: 0,
   });
 
-  const filterLabel = useMemo(() => {
-    if (filter === "today") return "Today";
-    if (filter === "last7days") return "Last 7 Days";
-    if (filter === "custom") return "Custom Date Range";
-    return "Monthly";
-  }, [filter]);
+  const filterLabel = "Monthly";
 
   const formatCurrency = (amount: number) => {
     const roundedAmount = Number(amount.toFixed(2));
@@ -85,16 +74,8 @@ export default function Profits() {
       setError("");
 
       try {
-        const params = new URLSearchParams({ filter });
-
-        if (filter === "custom") {
-          params.set("startDate", customStartDate);
-          params.set("endDate", customEndDate);
-        }
-
-        if (filter === "monthly") {
-          params.set("month", month);
-        }
+        const params = new URLSearchParams({ filter: "monthly" });
+        params.set("month", month);
 
         const response = await fetch(
           `/api/dashboard/profits?${params.toString()}`,
@@ -117,7 +98,7 @@ export default function Profits() {
     }
 
     void loadProfits();
-  }, [filter, customStartDate, customEndDate, month]);
+  }, [month]);
 
   return (
     <div className="p-6 space-y-6">
@@ -136,58 +117,14 @@ export default function Profits() {
         <CardContent className="space-y-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-end">
             <div className="space-y-1">
-              <div className="text-sm font-medium">Range Type</div>
-              <Select
-                value={filter}
-                onValueChange={(value) => setFilter(value as ProfitFilter)}
-              >
-                <SelectTrigger className="w-55">
-                  <SelectValue placeholder="Select filter" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="today">Today</SelectItem>
-                  <SelectItem value="last7days">Last 7 Days</SelectItem>
-                  <SelectItem value="custom">Custom Date Range</SelectItem>
-                  <SelectItem value="monthly">Monthly Filter</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="text-sm font-medium">Month</div>
+              <Input
+                type="month"
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
+                className="w-47.5"
+              />
             </div>
-
-            {filter === "custom" ? (
-              <>
-                <div className="space-y-1">
-                  <div className="text-sm font-medium">Start Date</div>
-                  <Input
-                    type="date"
-                    value={customStartDate}
-                    onChange={(e) => setCustomStartDate(e.target.value)}
-                    className="w-47.5"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <div className="text-sm font-medium">End Date</div>
-                  <Input
-                    type="date"
-                    value={customEndDate}
-                    onChange={(e) => setCustomEndDate(e.target.value)}
-                    className="w-47.5"
-                  />
-                </div>
-              </>
-            ) : null}
-
-            {filter === "monthly" ? (
-              <div className="space-y-1">
-                <div className="text-sm font-medium">Month</div>
-                <Input
-                  type="month"
-                  value={month}
-                  onChange={(e) => setMonth(e.target.value)}
-                  className="w-47.5"
-                />
-              </div>
-            ) : null}
           </div>
         </CardContent>
       </Card>
