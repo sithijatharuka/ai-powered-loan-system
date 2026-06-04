@@ -321,18 +321,11 @@ export async function PUT(
             const resolvedLoanStartDate = loanStartDate ?? existingCustomer.loanStartDate ?? existingCustomer.createdAt;
             const resolvedLoanEndDate = addMonthsUtc(resolvedLoanStartDate, duration);
 
-            // assign a loanId to the completed (rolled-over) loan
+            // preserve the existing loanId when moving to history
             const completedLoanBase = buildLoanSnapshot(existingCustomer);
-            const completedCounter = await Counter.findOneAndUpdate(
-                { name: "loan" },
-                { $inc: { seq: 1 } },
-                { new: true, upsert: true },
-            );
-
-            const completedSeq = Number(completedCounter?.seq || 0);
             const completedLoan = {
                 ...completedLoanBase,
-                loanId: `L${completedSeq}`,
+                loanId: (existingCustomer as any).loanId,
             };
 
             const loanHistory = [
