@@ -25,7 +25,8 @@ type DashboardSummary = {
   monthlyLoanGiven?: number;
   totalCustomers?: number;
   recentTransactions: Array<{
-    customerId: number;
+    txId?: string;
+    customerId: string;
     customerName: string;
     amount: number;
     date: string;
@@ -112,7 +113,7 @@ export default function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle>
-              Total amount collected from customers — {monthName}
+              Total amount collected from customers — {monthName} 
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xl font-bold text-green-600">
@@ -186,7 +187,7 @@ export default function Dashboard() {
             <TableBody>
               {recentTransactions.length > 0 ? (
                 recentTransactions.map((t) => (
-                  <TableRow key={`${t.customerId}-${t.date}-${t.amount}`}>
+                  <TableRow key={t.txId ?? `${t.customerId}-${t.date}-${t.amount}`}>
                     <TableCell>
                       {t.customerId} - {t.customerName}
                     </TableCell>

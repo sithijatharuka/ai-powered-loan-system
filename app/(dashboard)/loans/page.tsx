@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
+import {
+  calculateRemainingBalance,
+  determineLoanStatus,
+} from "@/lib/calculations";
 
 import {
   Table,
@@ -23,6 +27,7 @@ type LoanHistoryRow = {
   paidAmount: number;
   transactions: Array<{ amount: number; date: string | Date; note?: string }>;
   status?: "ongoing" | "completed";
+  loanId?: string;
   openedAt?: string | Date;
   closedAt?: string | Date;
 };
@@ -37,6 +42,7 @@ type CustomerLoan = {
   totalWithInterest: number;
   paidAmount: number;
   loanHistory?: LoanHistoryRow[];
+  loanId?: string;
   openedAt?: string | Date;
   createdAt?: string | Date;
   updatedAt?: string | Date;
@@ -74,14 +80,17 @@ export default function Loans() {
 
         const flattenedLoans = (data.customers ?? [])
           .flatMap((customer: CustomerLoan) => {
-            const currentTotal = Number(customer.totalWithInterest || 0);
-            const currentPaid = Number(customer.paidAmount || 0);
-            const currentRemaining = Math.max(currentTotal - currentPaid, 0);
-            const currentStatus: "ongoing" | "completed" =
-              currentRemaining > 0 ? "ongoing" : "completed";
+            const currentRemaining = calculateRemainingBalance(
+              customer.totalWithInterest,
+              customer.paidAmount,
+            );
+            const currentStatus: "ongoing" | "completed" = determineLoanStatus(
+              currentRemaining,
+            );
 
             const currentLoan = {
               ...customer,
+              loanId: customer.loanId || "",
               status: currentStatus,
               openedAt: customer.openedAt ?? customer.createdAt,
               closedAt:
@@ -89,10 +98,9 @@ export default function Loans() {
             };
 
             const historyLoans = (customer.loanHistory ?? []).map((loan) => {
-              const historyRemaining = Math.max(
-                Number(loan.totalWithInterest || 0) -
-                  Number(loan.paidAmount || 0),
-                0,
+              const historyRemaining = calculateRemainingBalance(
+                loan.totalWithInterest,
+                loan.paidAmount,
               );
 
               return {
@@ -102,9 +110,9 @@ export default function Loans() {
                 duration: loan.duration,
                 totalWithInterest: loan.totalWithInterest,
                 paidAmount: loan.paidAmount,
+                loanId: (loan as any).loanId || "",
                 status:
-                  loan.status ??
-                  (historyRemaining > 0 ? "ongoing" : "completed"),
+                  loan.status ?? determineLoanStatus(historyRemaining),
                 openedAt: loan.openedAt,
                 closedAt: loan.closedAt,
               };
@@ -112,10 +120,15 @@ export default function Loans() {
 
             return [currentLoan, ...historyLoans];
           })
-          .map((loan: CustomerLoan, index: number) => ({
-            ...loan,
-            loanId: formatLoanId(index + 1),
-          }));
+          .filter((loan: any) => loan.loanId)
+          .sort((a: any, b: any) => {
+            const parseId = (loan: any) => {
+              const id = loan?.loanId ?? "";
+              const num = Number(String(id).replace(/\D+/g, ""));
+              return Number.isFinite(num) ? num : 0;
+            };
+            return parseId(b) - parseId(a);
+          });
 
         setLoans(flattenedLoans);
       } finally {
@@ -192,20 +205,8 @@ export default function Loans() {
                 </TableCell>
               </TableRow>
             ) : loans.length > 0 ? (
-              loans
-                .sort((a, b) => {
-                  const aTs = new Date(
-                    a.openedAt ?? a.createdAt ?? 0,
-                  ).getTime();
-                  const bTs = new Date(
-                    b.openedAt ?? b.createdAt ?? 0,
-                  ).getTime();
-
-                  // oldest first so latest appears at the bottom
-                  return aTs - bTs;
-                })
-                .map((loan, index) => {
-                  const displayLoanId = formatLoanId(index + 1);
+              loans.map((loan) => {
+                  const displayLoanId = loan.loanId || "-";
                   const totalPayable = loan.totalWithInterest;
 
                   const remaining = totalPayable - loan.paidAmount;

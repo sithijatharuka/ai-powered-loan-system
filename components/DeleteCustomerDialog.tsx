@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 
 type DeleteCustomerDialogProps = {
-  customerId: number;
+  customerId: string;
   customerName: string;
 };
 
