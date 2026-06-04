@@ -141,6 +141,7 @@ function serializeCustomer(customer: {
         status: customer.status ?? (remaining > 0 ? "ongoing" : "completed"),
         transactions: customer.transactions,
         loanHistory: customer.loanHistory ?? [],
+        loanId: (customer as any).loanId,
         createdAt: customer.createdAt,
         updatedAt: customer.updatedAt,
     };

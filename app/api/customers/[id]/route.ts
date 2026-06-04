@@ -127,6 +127,7 @@ function serializeCustomer(customer: {
         paidAmount: customer.paidAmount,
         transactions: customer.transactions,
         loanHistory: customer.loanHistory ?? [],
+        loanId: (customer as any).loanId,
         createdAt: customer.createdAt,
         updatedAt: customer.updatedAt,
     };

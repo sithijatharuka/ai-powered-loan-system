@@ -90,6 +90,7 @@ export default function Loans() {
 
             const currentLoan = {
               ...customer,
+              loanId: customer.loanId || "",
               status: currentStatus,
               openedAt: customer.openedAt ?? customer.createdAt,
               closedAt:
@@ -109,32 +110,25 @@ export default function Loans() {
                 duration: loan.duration,
                 totalWithInterest: loan.totalWithInterest,
                 paidAmount: loan.paidAmount,
+                loanId: (loan as any).loanId || "",
                 status:
                   loan.status ?? determineLoanStatus(historyRemaining),
                 openedAt: loan.openedAt,
                 closedAt: loan.closedAt,
-                loanId: (loan as any).loanId,
               };
             });
 
-            return [
-              { ...currentLoan, loanId: (customer as any).loanId },
-              ...historyLoans,
-            ];
+            return [currentLoan, ...historyLoans];
           })
+          .filter((loan: any) => loan.loanId)
           .sort((a: any, b: any) => {
-            // Sort by loanId descending (L8 → L7 → L6...)
             const parseId = (loan: any) => {
               const id = loan?.loanId ?? "";
               const num = Number(String(id).replace(/\D+/g, ""));
               return Number.isFinite(num) ? num : 0;
             };
             return parseId(b) - parseId(a);
-          })
-          .map((loan: any, index: number) => ({
-            ...loan,
-            displaySeq: index + 1,
-          }));
+          });
 
         setLoans(flattenedLoans);
       } finally {
