@@ -212,91 +212,10 @@ export default function Profits() {
             </CardContent>
           </Card>
 
-          <div className="flex gap-2">
-            <Card className="flex-1">
-              <CardHeader>
-                <CardTitle>Profit — Ongoing</CardTitle>
-              </CardHeader>
-              <CardContent className="text-lg font-bold text-orange-600">
-                {formatCurrency(data.totalProfitOngoing ?? 0)}
-              </CardContent>
-            </Card>
-
-            <Card className="flex-1">
-              <CardHeader>
-                <CardTitle>Profit — Completed</CardTitle>
-              </CardHeader>
-              <CardContent className="text-lg font-bold text-green-600">
-                {formatCurrency(data.totalProfitCompleted ?? 0)}
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Profit Table</CardTitle>
-        </CardHeader>
-
-        <CardContent>
-          {error ? <p className="mb-4 text-sm text-red-600">{error}</p> : null}
-
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Interest Rate</TableHead>
-                <TableHead>Payment</TableHead>
-                <TableHead>Profit</TableHead>
-              </TableRow>
-            </TableHeader>
-
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="h-20 text-center text-muted-foreground"
-                  >
-                    Loading profits...
-                  </TableCell>
-                </TableRow>
-              ) : data.rows.length > 0 ? (
-                data.rows.map((row) => (
-                  <TableRow
-                    key={`${row.customerId}-${row.date}-${row.paymentAmount}`}
-                  >
-                    <TableCell>
-                      {new Date(row.date).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      {row.customerId} - {row.customerName}
-                    </TableCell>
-                    <TableCell>{row.interestRate}%</TableCell>
-                    <TableCell className="text-green-600 font-medium">
-                      {formatCurrency(row.paymentAmount)}
-                    </TableCell>
-                    <TableCell className="text-blue-600 font-medium">
-                      {formatCurrency(row.profit)}
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="h-24 text-center text-muted-foreground"
-                  >
-                    No profit records for this filter
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+    
     </div>
   );
 }
