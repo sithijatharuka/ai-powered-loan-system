@@ -119,7 +119,8 @@ export async function POST(
       note: String(body?.note ?? "Payment received"),
       profit: calculatePaymentInterestProfit(
         amount,
-        Number(customer.interestRate || 0)
+        Number(customer.interestRate || 0),
+        Number(customer.duration || 0)
       ),
     };
 
