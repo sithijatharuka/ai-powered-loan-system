@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -280,6 +281,19 @@ export default function Collections() {
     const paymentAmount = Number(amount);
     if (!Number.isFinite(paymentAmount) || paymentAmount <= 0) return;
 
+    const remainingBalance = Math.max(
+      Number(dialogCustomer.totalWithInterest || 0) -
+        Number(dialogCustomer.paidAmount || 0),
+      0
+    );
+
+    if (paymentAmount > remainingBalance) {
+      toast.error(
+        `Payment amount (Rs. ${paymentAmount.toLocaleString()}) exceeds remaining settlement amount (Rs. ${remainingBalance.toLocaleString()}). Please enter a valid amount.`
+      );
+      return;
+    }
+
     setDialogSubmitLoading(true);
     try {
       console.log("Submitting payment for customer:", dialogCustomer.id);
@@ -369,6 +383,29 @@ export default function Collections() {
 
     const paymentAmount = Number(editAmount);
     if (!Number.isFinite(paymentAmount) || paymentAmount <= 0) return;
+
+    const transactions = Array.isArray(editingCustomer.transactions)
+      ? editingCustomer.transactions
+      : [];
+    const oldTransactionAmount =
+      editTransactionIndex >= 0 && editTransactionIndex < transactions.length
+        ? Number(transactions[editTransactionIndex].amount || 0)
+        : 0;
+
+    const currentPaidAmount = Number(editingCustomer.paidAmount || 0);
+    const adjustedPaidAmount = currentPaidAmount - oldTransactionAmount;
+    const totalWithInterest = Number(editingCustomer.totalWithInterest || 0);
+    const remainingBalance = Math.max(
+      totalWithInterest - adjustedPaidAmount,
+      0
+    );
+
+    if (paymentAmount > remainingBalance) {
+      toast.error(
+        `Payment amount (Rs. ${paymentAmount.toLocaleString()}) exceeds remaining settlement amount (Rs. ${remainingBalance.toLocaleString()}). Please enter a valid amount.`
+      );
+      return;
+    }
 
     setEditLoading(true);
     try {
