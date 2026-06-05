@@ -45,7 +45,9 @@ export default function Settings() {
   const [officerToDelete, setOfficerToDelete] = useState<{ id: string; username: string } | null>(null);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [adminToUpdate, setAdminToUpdate] = useState<{ id: string; username: string } | null>(null);
+  const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [updatingPassword, setUpdatingPassword] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -140,12 +142,26 @@ export default function Settings() {
   function openPasswordDialog(adminId: string, username: string) {
     setAdminToUpdate({ id: adminId, username });
     setPasswordDialogOpen(true);
+    setOldPassword("");
     setNewPassword("");
+    setConfirmPassword("");
   }
 
   async function updatePassword() {
-    if (!adminToUpdate || !newPassword) {
-      toast.error("Password is required");
+    // Validation 01 - Empty field validation
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      toast.error("All fields are required");
+      return;
+    }
+
+    // Validation 03 - New password confirmation
+    if (newPassword !== confirmPassword) {
+      toast.error("New password and confirm password do not match");
+      return;
+    }
+
+    if (!adminToUpdate) {
+      toast.error("Admin user not found");
       return;
     }
 
@@ -157,13 +173,15 @@ export default function Settings() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: adminToUpdate.id,
-          password: newPassword,
+          oldPassword: oldPassword,
+          newPassword: newPassword,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok || !data.success) {
+        // Validation 02 - Old password verification (error from API)
         toast.error(data.message || "Failed to update password");
         return;
       }
@@ -171,7 +189,9 @@ export default function Settings() {
       toast.success("Password updated successfully");
       setPasswordDialogOpen(false);
       setAdminToUpdate(null);
+      setOldPassword("");
       setNewPassword("");
+      setConfirmPassword("");
     } catch {
       toast.error("Failed to update password");
     } finally {
@@ -465,7 +485,17 @@ export default function Settings() {
       </Dialog>
 
       {/* PASSWORD UPDATE DIALOG */}
-      <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+      <Dialog 
+        open={passwordDialogOpen} 
+        onOpenChange={(open) => {
+          setPasswordDialogOpen(open);
+          if (!open) {
+            setOldPassword("");
+            setNewPassword("");
+            setConfirmPassword("");
+          }
+        }}
+      >
         <DialogContent className="w-[calc(100vw-1.5rem)] sm:max-w-md rounded-2xl p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="text-base sm:text-lg">Update Password</DialogTitle>
@@ -474,6 +504,18 @@ export default function Settings() {
             <p className="text-sm text-muted-foreground">
               Update password for admin &quot;{adminToUpdate?.username}&quot;
             </p>
+            
+            <div className="space-y-2">
+              <Label className="text-xs sm:text-sm">Old Password</Label>
+              <Input
+                type="password"
+                placeholder="Enter old password"
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
+                className="h-9 sm:h-10 text-xs sm:text-sm"
+              />
+            </div>
+
             <div className="space-y-2">
               <Label className="text-xs sm:text-sm">New Password</Label>
               <Input
@@ -481,6 +523,17 @@ export default function Settings() {
                 placeholder="Enter new password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
+                className="h-9 sm:h-10 text-xs sm:text-sm"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs sm:text-sm">Confirm Password</Label>
+              <Input
+                type="password"
+                placeholder="Confirm new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 className="h-9 sm:h-10 text-xs sm:text-sm"
               />
             </div>
@@ -496,7 +549,7 @@ export default function Settings() {
             </Button>
             <Button
               onClick={updatePassword}
-              disabled={updatingPassword || !newPassword}
+              disabled={updatingPassword}
               className="text-xs sm:text-sm h-9 sm:h-10"
             >
               {updatingPassword ? "Updating..." : "Update"}
