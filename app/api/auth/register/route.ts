@@ -166,11 +166,12 @@ export async function PUT(request: NextRequest) {
 
         const body = await request.json().catch(() => null);
         const userId = body?.id;
-        const newPassword = String(body?.password ?? "");
+        const oldPassword = String(body?.oldPassword ?? "");
+        const newPassword = String(body?.newPassword ?? "");
 
-        if (!userId || !newPassword) {
+        if (!userId || !oldPassword || !newPassword) {
             return NextResponse.json(
-                { success: false, message: "User ID and password are required" },
+                { success: false, message: "User ID, old password, and new password are required" },
                 { status: 400 }
             );
         }
@@ -183,6 +184,16 @@ export async function PUT(request: NextRequest) {
             return NextResponse.json(
                 { success: false, message: "User not found" },
                 { status: 404 }
+            );
+        }
+
+        // Verify old password
+        const isOldPasswordValid = await bcrypt.compare(oldPassword, user.password);
+
+        if (!isOldPasswordValid) {
+            return NextResponse.json(
+                { success: false, message: "Old password is incorrect" },
+                { status: 400 }
             );
         }
 
