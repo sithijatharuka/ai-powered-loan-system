@@ -6,7 +6,7 @@ import { Customer } from "@/lib/model/customerModel";
 
 export const runtime = "nodejs";
 
-type ProfitFilter = "today" | "last7days" | "custom" | "monthly";
+type ProfitFilter = "today" | "last7days" | "custom" | "monthly" | "daily";
 
 type ProfitRow = {
   customerId: string;
@@ -66,6 +66,22 @@ function getDateRange(filter: ProfitFilter, searchParams: URLSearchParams) {
     return { start, end };
   }
 
+  if (filter === "daily") {
+    const dateValue = searchParams.get("date") ?? "";
+    const date = parseDateFromYmd(dateValue);
+
+    if (!date) {
+      return null;
+    }
+
+    const start = new Date(date);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(date);
+    end.setHours(23, 59, 59, 999);
+
+    return { start, end };
+  }
+
   const monthValue = searchParams.get("month") ?? "";
   const [yearRaw, monthRaw] = monthValue.split("-");
   const year = Number(yearRaw);
@@ -91,7 +107,8 @@ function getFilterType(value: string | null): ProfitFilter {
     value === "today" ||
     value === "last7days" ||
     value === "custom" ||
-    value === "monthly"
+    value === "monthly" ||
+    value === "daily"
   ) {
     return value;
   }
