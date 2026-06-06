@@ -24,6 +24,8 @@ type DashboardSummary = {
   monthlyCollected?: number;
   monthlyLoanGiven?: number;
   totalCustomers?: number;
+  todaysCollected?: number;
+  todaysProfit?: number;
   recentTransactions: Array<{
     txId?: string;
     customerId: string;
@@ -73,6 +75,8 @@ export default function Dashboard() {
   const monthlyCollected = summary?.monthlyCollected ?? 0;
   const monthlyLoanGiven = summary?.monthlyLoanGiven ?? 0;
   const totalCustomers = summary?.totalCustomers ?? 0;
+  const todaysCollected = summary?.todaysCollected ?? 0;
+  const todaysProfit = summary?.todaysProfit ?? 0;
   const monthName =
     summary?.monthName ??
     new Date().toLocaleString(undefined, { month: "long" });
@@ -113,7 +117,7 @@ export default function Dashboard() {
         <Card>
           <CardHeader>
             <CardTitle>
-              Total amount collected from customers — {monthName} 
+              Total amount collected from customers — {monthName}
             </CardTitle>
           </CardHeader>
           <CardContent className="text-xl font-bold text-green-600">
@@ -165,6 +169,24 @@ export default function Dashboard() {
             {loading ? "Loading..." : totalCustomers}
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Today's Collected Amount</CardTitle>
+          </CardHeader>
+          <CardContent className="text-xl font-bold text-green-600">
+            {formatCurrency(todaysCollected)}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Today's Profit</CardTitle>
+          </CardHeader>
+          <CardContent className="text-xl font-bold text-blue-600">
+            {formatCurrency(todaysProfit)}
+          </CardContent>
+        </Card>
       </div>
 
       {/* RECENT TRANSACTIONS */}
@@ -187,7 +209,9 @@ export default function Dashboard() {
             <TableBody>
               {recentTransactions.length > 0 ? (
                 recentTransactions.map((t) => (
-                  <TableRow key={t.txId ?? `${t.customerId}-${t.date}-${t.amount}`}>
+                  <TableRow
+                    key={t.txId ?? `${t.customerId}-${t.date}-${t.amount}`}
+                  >
                     <TableCell>
                       {t.customerId} - {t.customerName}
                     </TableCell>
