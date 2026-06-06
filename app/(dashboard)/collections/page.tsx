@@ -40,10 +40,10 @@ export default function Collections() {
     setLoading(true);
 
     try {
-      // Do not fetch all customers by default (avoid listing everyone).
+      // Always fetch customers if there's a search term
       if (!searchTerm && !fetchOnlyWithTransactions) {
-        setCustomers([]);
-        return;
+        // Load customers with transactions by default for collection view
+        fetchOnlyWithTransactions = true;
       }
 
       const response = await fetch(
@@ -58,7 +58,7 @@ export default function Collections() {
 
       let fetched = data.customers ?? [];
 
-      if (fetchOnlyWithTransactions || !searchTerm) {
+      if (fetchOnlyWithTransactions && !searchTerm) {
         fetched = fetched.filter((c: any) => {
           const hasCurrentTx = Array.isArray(c.transactions) && c.transactions.length > 0;
           const hasHistoryTx = Array.isArray(c.loanHistory) &&
@@ -81,6 +81,14 @@ export default function Collections() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Re-filter when date filter or custom dates change
+  useEffect(() => {
+    if (dateFilter === "custom" && (customStartDate || customEndDate)) {
+      // Trigger a re-render by updating a state that forces component update
+      // The filtered array will automatically update due to the dependency on customStartDate/customEndDate
+    }
+  }, [dateFilter, customStartDate, customEndDate]);
+
   function toLocalDateKey(value: string | Date | number | null | undefined) {
     if (!value) {
       return "";
@@ -102,19 +110,24 @@ export default function Collections() {
   }
 
   const filtered = customers.filter((c) => {
-    const matchesSearch =
-      String(c.id).includes(search) ||
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.contact.includes(search);
+    // First apply search filter
+    if (search.trim()) {
+      const matchesSearch =
+        String(c.id).includes(search) ||
+        c.name.toLowerCase().includes(search.toLowerCase()) ||
+        c.contact.includes(search);
 
-    if (!matchesSearch) {
-      return false;
+      if (!matchesSearch) {
+        return false;
+      }
     }
 
+    // If no date filter or "all" is selected, show all customers
     if (dateFilter === "all") {
       return true;
     }
 
+    // Collect all transaction dates from current loan and history
     const transactionDateKeys = [] as string[];
 
     if (Array.isArray(c.transactions)) {
@@ -133,47 +146,33 @@ export default function Collections() {
       });
     }
 
+    // If no transactions found, exclude from date-filtered results
     if (transactionDateKeys.length === 0) {
       return false;
     }
 
+    // Apply date filters
     if (dateFilter === "today") {
       const now = new Date();
-      const today =
-        now.getFullYear() +
-        "-" +
-        String(now.getMonth() + 1).padStart(2, "0") +
-        "-" +
-        String(now.getDate()).padStart(2, "0");
-
-      return transactionDateKeys.some((dateKey: string) => dateKey === today);
+      const today = toLocalDateKey(now);
+      return transactionDateKeys.includes(today);
     }
 
     if (dateFilter === "last7days") {
       const now = new Date();
-      const today =
-        now.getFullYear() +
-        "-" +
-        String(now.getMonth() + 1).padStart(2, "0") +
-        "-" +
-        String(now.getDate()).padStart(2, "0");
+      const today = toLocalDateKey(now);
       const sevenDaysAgo = new Date(now);
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
-      const sevenDaysAgoDateOnly =
-        sevenDaysAgo.getFullYear() +
-        "-" +
-        String(sevenDaysAgo.getMonth() + 1).padStart(2, "0") +
-        "-" +
-        String(sevenDaysAgo.getDate()).padStart(2, "0");
+      const sevenDaysAgoKey = toLocalDateKey(sevenDaysAgo);
 
       return transactionDateKeys.some(
-        (dateKey: string) =>
-          dateKey >= sevenDaysAgoDateOnly && dateKey <= today,
+        (dateKey: string) => dateKey >= sevenDaysAgoKey && dateKey <= today
       );
     }
 
     if (dateFilter === "custom") {
-      if (customStartDate === "" && customEndDate === "") {
+      // If no custom dates set, show nothing
+      if (!customStartDate && !customEndDate) {
         return false;
       }
 
@@ -181,11 +180,9 @@ export default function Collections() {
         if (customStartDate && dateKey < customStartDate) {
           return false;
         }
-
         if (customEndDate && dateKey > customEndDate) {
           return false;
         }
-
         return true;
       });
     }
@@ -449,45 +446,49 @@ export default function Collections() {
       <div className="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
         <h1 className="text-xl sm:text-2xl font-bold">Collections</h1>
 
-        <div className="flex flex-col gap-2 sm:gap-3 lg:flex-row lg:items-center w-full lg:w-auto">
-          <Input
-            placeholder="Search by ID or customer..."
-            className="w-full lg:w-80 text-xs sm:text-sm h-9 sm:h-10"
-            value={search}
-            onChange={(e) => {
-              const value = e.target.value;
-              setSearch(value);
-              void loadCustomers(value);
-            }}
-          />
+        <div className="flex flex-col gap-2 sm:gap-3 lg:flex-row lg:items-start lg:justify-between w-full lg:w-auto">
+          <div className="flex flex-col gap-2 sm:gap-3 lg:flex-row lg:items-center">
+            <Input
+              placeholder="Search by Customer ID"
+              className="w-full lg:w-80 text-xs sm:text-sm h-9 sm:h-10"
+              value={search}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSearch(value);
+                void loadCustomers(value);
+              }}
+            />
 
-          <select
-            className="h-9 sm:h-10 rounded-md border border-input bg-background px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm w-full lg:w-auto"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-          >
-            <option value="all">All</option>
-            <option value="today">Today</option>
-            <option value="last7days">Last 7 days</option>
-            <option value="custom">Custom date range</option>
-          </select>
+            <select
+              className="h-9 sm:h-10 rounded-md border border-input bg-background px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm w-full lg:w-auto min-w-[160px]"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+            >
+              <option value="all">All</option>
+              <option value="today">Today</option>
+              <option value="last7days">Last 7 days</option>
+              <option value="custom">Custom date range</option>
+            </select>
 
-          {dateFilter === "custom" ? (
-            <div className="flex flex-col gap-2 sm:flex-row w-full lg:w-auto">
-              <Input
-                type="date"
-                value={customStartDate}
-                onChange={(e) => setCustomStartDate(e.target.value)}
-                className="text-xs sm:text-sm h-9 sm:h-10 flex-1 lg:flex-none"
-              />
-              <Input
-                type="date"
-                value={customEndDate}
-                onChange={(e) => setCustomEndDate(e.target.value)}
-                className="text-xs sm:text-sm h-9 sm:h-10 flex-1 lg:flex-none"
-              />
-            </div>
-          ) : null}
+            {dateFilter === "custom" && (
+              <div className="flex flex-col gap-2 sm:flex-row lg:flex-row">
+                <Input
+                  type="date"
+                  placeholder="Start date"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  className="text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto"
+                />
+                <Input
+                  type="date"
+                  placeholder="End date"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  className="text-xs sm:text-sm h-9 sm:h-10 w-full sm:w-auto"
+                />
+              </div>
+            )}
+          </div>
 
           {/* Global Add Payment Dialog Trigger */}
           <Dialog
@@ -505,7 +506,7 @@ export default function Collections() {
             }}
           >
             <DialogTrigger asChild>
-              <Button className="w-full lg:w-auto text-xs sm:text-sm h-9 sm:h-10">
+              <Button className="w-full lg:w-auto text-xs sm:text-sm h-9 sm:h-10 whitespace-nowrap">
                 Add Payment
               </Button>
             </DialogTrigger>
