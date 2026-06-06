@@ -37,7 +37,7 @@ const menu = [
   { title: "Loans", href: "/loans", icon: Banknote },
   { title: "Profits", href: "/profits", icon: TrendingUp },
   { title: "Settings", href: "/settings", icon: Settings },
-  { title: "Recycle Bin", href: "/recycle-bin", icon: Trash2 },
+  // { title: "Recycle Bin", href: "/recycle-bin", icon: Trash2 },
 ];
 
 export default function AppSidebar() {
