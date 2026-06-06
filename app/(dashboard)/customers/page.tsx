@@ -23,7 +23,7 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState<Array<any>>([]);
   const [loading, setLoading] = useState(true);
 
-  async function loadCustomers(searchTerm = search) {
+  async function loadCustomers(searchTerm = "") {
     setLoading(true);
 
     try {
@@ -46,14 +46,6 @@ export default function CustomersPage() {
   useEffect(() => {
     void loadCustomers();
   }, []);
-
-  const filteredCustomers = customers.filter(
-    (c) =>
-      String(c.id).includes(search) ||
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.contact.includes(search) ||
-      c.address.toLowerCase().includes(search.toLowerCase()),
-  );
 
   return (
     <div className="w-full p-3 sm:p-6 space-y-4">
@@ -128,8 +120,8 @@ export default function CustomersPage() {
                   Loading customers...
                 </TableCell>
               </TableRow>
-            ) : filteredCustomers.length > 0 ? (
-              filteredCustomers
+            ) : customers.length > 0 ? (
+              customers
                 .sort((a, b) => a.id - b.id)
                 .map((c, index) => (
                   <TableRow

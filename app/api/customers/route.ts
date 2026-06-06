@@ -186,17 +186,20 @@ export async function GET(request: NextRequest) {
         }
 
         const normalizedSearch = normalizeCustomerId(search);
+        const isSearchValidCustomerId = isValidCustomerId(normalizedSearch);
+        
         const query = customerIdParam
             ? { customerId: normalizeCustomerId(customerIdParam) }
             : search
-                ? {
-                    $or: [
-                        ...(isValidCustomerId(normalizedSearch) ? [{ customerId: normalizedSearch }] : []),
-                        { name: { $regex: search, $options: "i" } },
-                        { contact: { $regex: search, $options: "i" } },
-                        { address: { $regex: search, $options: "i" } },
-                    ],
-                }
+                ? isSearchValidCustomerId
+                    ? { customerId: normalizedSearch }
+                    : {
+                        $or: [
+                            { name: { $regex: search, $options: "i" } },
+                            { contact: { $regex: search, $options: "i" } },
+                            { address: { $regex: search, $options: "i" } },
+                        ],
+                    }
                 : {};
 
         const customers = await Customer.find(query).sort({ createdAt: -1 });
